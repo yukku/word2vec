@@ -1,3 +1,13 @@
+.ideas
+package-lock.json
+public
+exported
+node_modules
+.idea/
+.idea/workspace.xml
+**/.DS_Store
+
+
 # Logs
 logs
 *.log
