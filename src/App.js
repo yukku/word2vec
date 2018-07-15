@@ -10,6 +10,24 @@ export default class App {
         return oneHot
     }
 
+    loss(predictions, labels) {
+        const meanSquareError = predictions.sub(labels).square().mean();
+        return meanSquareError;
+    }
+
+    // async function train(xs, ys, numIterations) {
+    //     for (let iter = 0; iter < numIterations; iter++) {
+    //         optimizer.minimize(() => {
+    //             const pred = predict(xs);
+    //             return loss(pred, ys);
+    //             return dl.losses.softmaxCrossEntropy(trainingWebcamTensor, resultTensor).mean()
+
+    //         });
+
+    //         await tf.nextFrame();
+    //     }
+    // }
+
 
     constructor() {
 
@@ -59,51 +77,69 @@ export default class App {
             yTrain.set(this.toOneHot(word2int[ data[l][1] ], words.length), words.length * l)
         }
 
-        // console.log(xTrain.length * words.length)
-        const xTrainTensor = tf.tensor2d(xTrain, [data.length, words.length]);
-        const yTrainTensor = tf.tensor2d(yTrain, [data.length, words.length]);
+
+        const xs = tf.tensor2d(xTrain, [data.length, words.length]);
+        const ys = tf.tensor2d(yTrain, [data.length, words.length]);
+
+
 
         const EMBEDDING_DIM = 5
-        // const inputX = tf.input({shape: [words.length]})
-        // const y_label = tf.input({shape: [words.length]})
-
-        // const x = tf.placeholder(tf.float32, shape=(None, vocab_size))
-        // const y_label = tf.placeholder(tf.float32, shape=(None, vocab_size))
-
         const W1 = tf.variable(tf.randomNormal([words.length, EMBEDDING_DIM]))
         const b1 = tf.variable(tf.randomNormal([EMBEDDING_DIM]))
-
-        const xTrainW1 = tf.matMul(xTrainTensor, W1)
-        const hidden_representation = tf.add(xTrainW1, b1)
-
-
         const W2 = tf.variable(tf.randomNormal([EMBEDDING_DIM, words.length]))
         const b2 = tf.variable(tf.randomNormal([words.length]))
-        const prediction = tf.softmax(tf.add( tf.matMul(hidden_representation, W2), b2))
 
+        const f = x => {
+            const xTrainW1 = tf.matMul(x, W1)
+            const hidden_representation = tf.add(xTrainW1, b1)
+            return tf.softmax(tf.add( tf.matMul(hidden_representation, W2), b2))
+        }
 
+        const loss = (pred, label) => pred.sub(label).square().mean();
+        // const loss = (pred, label) => pred.sub(label).square().mean();
+        const learningRate = 0.1;
+        const optimizer = tf.train.sgd(learningRate);
 
-/*
+        // Train the model.
+        for (let i = 0; i < 20; i++) {
+            optimizer.minimize(() => {
+                const result = loss(f(xs), ys)
+                console.log(result.dataSync()[0])
+                return result
+            });
+        }
 
-
-
-        // Define a model for linear regression.
-        const model = tf.sequential();
-        model.add(tf.layers.dense({units: 1, inputShape: [1]}));
-
-        // Prepare the model for training: Specify the loss and the optimizer.
-        model.compile({loss: 'meanSquaredError', optimizer: 'sgd'});
-
-        // Generate some synthetic data for training.
-        const xs = tf.tensor2d([1, 2, 3, 4], [4, 1]);
-        const ys = tf.tensor2d([1, 3, 5, 7], [4, 1]);
-
-        // Train the model using the data.
-        model.fit(xs, ys, {epochs: 10}).then(() => {
-          // Use the model to do inference on a data point the model hasn't seen before:
-          model.predict(tf.tensor2d([5], [1, 1])).print();
+        // Make predictions.
+        // console.log(`a: ${a.dataSync()}, b: ${b.dataSync()}, c: ${c.dataSync()}`);
+        const preds = f(xs).dataSync();
+        preds.forEach((pred, i) => {
+           // console.log(`x: ${i}, pred: ${pred}`);
         });
-*/
+
+
+        // const axis = 1;
+        // const crossEntropyLoss = tf.mean(tf.logSumExp(tf.mul(label, tf.log(pred)), axis))
+        // const loss = (pred, label) => tf.mean(tf.logSumExp(tf.mul(label, tf.log(pred)), axis));
+        // const loss = (pred, label) => pred.sub(label).square().mean();
+        // console.log(loss(pred, label))
+        // const trainStep = tf.train.sgd(0.1).minimize(loss)
+
+        // await train(trainingData.xs, trainingData.ys, numIterations);
+
+        /*
+        sess = tf.Session()
+        init = tf.global_variables_initializer()
+        sess.run(init) #make sure you do this!
+        # define the loss function:
+        cross_entropy_loss = tf.reduce_mean(-tf.reduce_sum(y_label * tf.log(prediction), reduction_indices=[1]))
+        # define the training step:
+        train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cross_entropy_loss)
+        n_iters = 10000
+        # train for n_iter iterations
+        for _ in range(n_iters):
+            sess.run(train_step, feed_dict={x: x_train, y_label: y_train})
+            print('loss is : ', sess.run(cross_entropy_loss, feed_dict={x: x_train, y_label: y_train}))
+            */
     }
 }
 
