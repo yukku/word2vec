@@ -19,8 +19,11 @@
   "homepage": "https://github.com/yukku/word2vec#readme",
   "dependencies": {
     "@tensorflow/tfjs": "^0.12.2",
+    "@tensorflow/tfjs-tsne": "^0.2.0",
     "babel-core": "^6.26.3",
     "babel-preset-es2015-rollup": "^3.0.0",
+    "euclidean-distance": "^1.0.0",
+    "lodash": "^4.17.10",
     "rollup": "^0.58.2",
     "rollup-plugin-babel": "^3.0.4",
     "rollup-plugin-commonjs": "^9.1.3",
