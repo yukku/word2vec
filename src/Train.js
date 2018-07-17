@@ -5,6 +5,8 @@ import TSNE from 'tsne-js'
 import TrainUtil from "./TrainUtil.js"
 import Model from "./Model.js"
 
+const TRAINING_STEPS = 200
+
 export default class Train {
 
     constructor() {
@@ -33,7 +35,7 @@ export default class Train {
         const loss = (pred, label) => pred.sub(label).square().mean();
         const optimizer = tf.train.adam();
 
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < TRAINING_STEPS; i++) {
             optimizer.minimize(() => {
                 const result = loss(this.model.predict(xs), ys)
                 // console.log(result.dataSync()[0])

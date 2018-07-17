@@ -17,11 +17,16 @@ export default class Renderer{
         this.renderer.setPixelRatio(2);
 
         this.scene = new THREE.Scene()
-        this.camera = new THREE.PerspectiveCamera( 45, width / height, 1, 1000)
+        const fogColor = new THREE.Color(0x000000);
+        this.scene.background = fogColor;
+        this.scene.fog = new THREE.Fog(fogColor, 10, 1000);
+
+
+        this.camera = new THREE.PerspectiveCamera( 45, width / height, 1, 100000)
         this.camera.lookAt(new THREE.Vector3(0, 0, 0))
         this.camera.position.z = 300;
         this.controls = new THREE.OrbitControls( this.camera );
-
+        this.controls.autoRotate = true
 
     }
 
@@ -33,12 +38,12 @@ export default class Renderer{
 
             const geometry = new THREE.TextGeometry(word, {
                 font: font,
-                size: 20,
-                height: 5,
+                size: 4,
+                height: 0,
                 curveSegments: 5,
                 bevelEnabled: false,
-                bevelThickness: 1,
-                bevelSize: 8,
+                bevelThickness: 0,
+                bevelSize: 0,
                 bevelSegments: 2
             });
             geometry.center()
@@ -54,18 +59,18 @@ export default class Renderer{
             this.scene.add(mesh)
         })
 
-        this.scene.add(new THREE.HemisphereLight( 0xffffff, 0x999999, 1 ));
+        this.scene.add(new THREE.AmbientLight(0xffffff, 1));
 
         this.animate()
     }
 
     update(data) {
-        const scale = 50
+
+        const scale = 180
         this.meshes.forEach((mesh, index) => {
             mesh.position.x = data[index][0] * scale
             mesh.position.y = data[index][1] * scale
             mesh.position.z = data[index][2] * scale
-
         })
     }
 
@@ -76,6 +81,13 @@ export default class Renderer{
 
     render() {
         this.renderer.render(this.scene, this.camera)
+
+        this.meshes.forEach((mesh, index) => {
+            mesh.rotation.x = this.camera.rotation.x
+            mesh.rotation.y = this.camera.rotation.y
+            mesh.rotation.z = this.camera.rotation.z
+        })
+        this.controls.update()
     }
 
     resize({ width, height }) {
