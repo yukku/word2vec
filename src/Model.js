@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs'
 
 const EMBEDDING_DIM = 5
+const STDEV = 0.9
 
 export default class Model {
 
@@ -18,7 +19,7 @@ export default class Model {
     predict(x) {
         return tf.tidy(() => {
             const hidden_representation = tf.add(tf.matMul(x, this.W1), this.b1)
-            return tf.softmax(tf.add( tf.matMul(hidden_representation, this.W2), this.b2))
+            return tf.add( tf.matMul(hidden_representation, this.W2), this.b2)
         })
     }
 

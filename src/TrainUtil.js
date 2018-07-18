@@ -1,4 +1,7 @@
 import * as THREE from "three"
+// import euclideanDistance from 'euclidean-distance'
+import euclideanDistance from 'ml-distance-euclidean'
+import _ from 'lodash'
 
 export default class TrainUtil{
     static getUniqueWords(corpus) {
@@ -61,6 +64,7 @@ export default class TrainUtil{
     static getOneHotData(data, words, word2int, index) {
         const trainData = new Uint8Array(data.length * words.length);
         for(var l=0; l < data.length; l++) {
+            // console.log(this.toOneHot(word2int[ data[l][index] ]))
             trainData.set(this.toOneHot(word2int[ data[l][index] ], words.length), words.length * l)
         }
         return trainData
@@ -91,6 +95,10 @@ export default class TrainUtil{
         for(var i=0; i<shape[0]; i++) {
             const vector = vectors.slice(i*shape[1], i*shape[1] + shape[1])
             const distance = euclideanDistance(vector, queryVector)
+            // console.log("---")
+            // console.log(wordIndex)
+            // console.log(distance)
+            // console.log(i)
             if(distance < minDist && !_.isEqual(vector.sort(), queryVector.sort())) {
                 minDist = distance
                 minIndex = i
