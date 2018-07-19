@@ -8,7 +8,7 @@ export default class Tsne extends EventEmitter{
         this.worker.onmessage = this.onMessage.bind(this)
     }
 
-    start(vectors, words) {
+    process(vectors, words) {
         this.words = words
         this.worker.postMessage({
             type: 'INPUT_DATA',

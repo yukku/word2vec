@@ -5,7 +5,7 @@ import TrainUtil from "./TrainUtil.js"
 import Model from "./Model.js"
 import EventEmitter from "eventemitter3"
 
-const TRAINING_STEPS = 100
+const TRAINING_STEPS = 500
 
 export default class Train extends EventEmitter{
 
@@ -20,7 +20,7 @@ export default class Train extends EventEmitter{
         this.corpus = corpus
     }
 
-    async train() {
+    async preprocess() {
 
         const words = TrainUtil.getUniqueWords(this.corpus)
         const sentences = TrainUtil.getSentences(this.corpus)
@@ -31,60 +31,60 @@ export default class Train extends EventEmitter{
 
         this.model.setupNetwork(words.length)
 
-        const xs = tf.tensor2d(xTrainData, [data.length, words.length]);
-        const ys = tf.tensor2d(yTrainData, [data.length, words.length]);
+        this.xs = tf.tensor2d(xTrainData, [data.length, words.length]);
+        this.ys = tf.tensor2d(yTrainData, [data.length, words.length]);
 
         // const loss = (pred, label) => pred.sub(label).square().mean();
-        const loss = (pred, label) => tf.losses.softmaxCrossEntropy(label, pred).mean();
+        this.loss = (pred, label) => tf.losses.softmaxCrossEntropy(label, pred).mean();
 
         this.emit("PREPROCESSED", words)
 
+        // this.optimizer = tf.train.sgd(0.01);
+        this.optimizer = tf.train.adam();
 
 
+        for(let i=0; i < TRAINING_STEPS; i++) {
+            await this.trainOneStep(false)
+        }
         // const loss = (pred, label) => tf.softmax(label);
         // const optimizer = tf.train.sgd(1.0);
-        const optimizer = tf.train.sgd(0.1);
 
-        for (let i = 0; i < TRAINING_STEPS; i++) {
-            console.log("steps", i)
-            optimizer.minimize(() => {
-                const result = loss(this.model.predict(xs), ys)
-
-                const {W1, b1} = this.model.getLayers()
-                const vectors = tf.add(W1, b1)
-
-                this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
-
-                console.log(result.dataSync()[0])
-                return result
-            });
-            await tf.nextFrame()
-            await this.timeout()
-
-        }
-
-        const {W1, b1} = this.model.getLayers()
-        const vectors = tf.add(W1, b1)
+        // const {W1, b1} = this.model.getLayers()
+        // const vectors = tf.add(W1, b1)
 
         // const closestIndex = TrainUtil.findClosest(word2int['king'], vectors.shape, vectors.dataSync())
         // // console.log(closestIndex)
         // const closest = int2word[closestIndex]
         // console.log(closest)
 
-        return {
-            vectors: TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape),
-            words: words
-        }
+        // return {
+        //     vectors: TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape),
+        //     words: words
+        // }
     }
 
-    async trainStep() {
+    async trainOneStep(emit = true) {
+
+        this.optimizer.minimize(() => {
+            const result = this.loss(this.model.predict(this.xs), this.ys)
+
+            const {W1, b1} = this.model.getLayers()
+            const vectors = tf.add(W1, b1)
+
+            if(emit) this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
+
+            console.log("loss", result.dataSync()[0])
+            return result
+        });
+        await tf.nextFrame()
+        // await this.timeout()
 
     }
 
 
 
     timeout() {
-        return new Promise(resolve => setTimeout(resolve, 500));
+        return new Promise(resolve => setTimeout(resolve, 1500));
     }
 }
 

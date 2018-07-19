@@ -18,27 +18,34 @@
         this.tsne = new Tsne()
         this.tsne.on("PROGRESS_DATA", this.onProgressData.bind(this))
     }
+
+    async process(text) {
+        this.train.setText(text)
+        await this.train.preprocess()
+        this.train.trainOneStep()
+    }
+
     onTrainingPreprocessed(words) {
         this.renderer.setup(words)
     }
 
     onTrainingProgressData(vectors) {
-        this.tsne.start(vectors)
+        this.tsne.process(vectors)
     }
 
-    onProgressData(progressData) {
-        // console.log(progressData)
-        // console.log(progressData)
+    async onProgressData(progressData) {
         this.renderer.update(progressData)
-    }
+        // await this.timeout()
+        this.train.trainOneStep()
 
-    async process(text) {
-        this.train.setText(text)
-        const {vectors, words} = await this.train.train()
     }
 
     resize({ width, height }) {
         this.renderer.resize({ width, height })
+    }
+
+    timeout() {
+        return new Promise(resolve => setTimeout(resolve, 500));
     }
 }
 

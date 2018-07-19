@@ -1,5 +1,7 @@
 import * as THREE from "three"
 if(!global.THREE) global.THREE = THREE
+import TweenLite from "gsap"
+console.log(TweenLite)
 import RendererUtil from "./RendererUtil.js"
 require("./lib/three/examples/js/controls/OrbitControls.js")
 
@@ -68,9 +70,20 @@ export default class Renderer{
         // console.log(data)
         const scale = 180
         this.meshes.forEach((mesh, index) => {
-            mesh.position.x = data[index][0] * scale
-            mesh.position.y = data[index][1] * scale
-            mesh.position.z = data[index][2] * scale
+            TweenLite.to(mesh.position, 0.6, {
+                x: data[index][0] * scale,
+                y: data[index][1] * scale,
+                z: data[index][2] * scale,
+                ease: Power2.easeOut,
+                // onUpdate: this.update.bind(this),
+                // onComplete: () => {
+                //     this.endAnimateExtreme()
+                // }
+            })
+
+            // mesh.position.x = data[index][0] * scale
+            // mesh.position.y = data[index][1] * scale
+            // mesh.position.z = data[index][2] * scale
         })
     }
 
