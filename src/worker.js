@@ -19,12 +19,12 @@ isBusy();
 const model = new TSNE({
     dim: 3,
     perplexity: 30.0,
-    earlyExaggeration: 4.0,
-    learningRate: 10.0,
-    nIter: 500,
+    earlyExaggeration: 1.0,
+    learningRate: 100.0,
+    nIter: 200,
     metric: 'euclidean'
 });
-
+// console.log(model)
 let firstRun = true;
 
 self.onmessage = function (e) {

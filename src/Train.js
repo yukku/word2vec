@@ -3,12 +3,15 @@ import _ from 'lodash'
 import TSNE from 'tsne-js'
 import TrainUtil from "./TrainUtil.js"
 import Model from "./Model.js"
+import EventEmitter from "eventemitter3"
 
-const TRAINING_STEPS = 500
+const TRAINING_STEPS = 100
 
-export default class Train {
+export default class Train extends EventEmitter{
 
     constructor() {
+        super()
+
         this.model = new Model()
         this.corpus = ""
     }
@@ -17,7 +20,7 @@ export default class Train {
         this.corpus = corpus
     }
 
-    train() {
+    async train() {
 
         const words = TrainUtil.getUniqueWords(this.corpus)
         const sentences = TrainUtil.getSentences(this.corpus)
@@ -34,18 +37,30 @@ export default class Train {
         // const loss = (pred, label) => pred.sub(label).square().mean();
         const loss = (pred, label) => tf.losses.softmaxCrossEntropy(label, pred).mean();
 
+        this.emit("PREPROCESSED", words)
+
 
 
         // const loss = (pred, label) => tf.softmax(label);
         // const optimizer = tf.train.sgd(1.0);
-        const optimizer = tf.train.adam(1.2);
+        const optimizer = tf.train.sgd(0.1);
 
         for (let i = 0; i < TRAINING_STEPS; i++) {
+            console.log("steps", i)
             optimizer.minimize(() => {
                 const result = loss(this.model.predict(xs), ys)
+
+                const {W1, b1} = this.model.getLayers()
+                const vectors = tf.add(W1, b1)
+
+                this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
+
                 console.log(result.dataSync()[0])
                 return result
             });
+            await tf.nextFrame()
+            await this.timeout()
+
         }
 
         const {W1, b1} = this.model.getLayers()
@@ -60,6 +75,16 @@ export default class Train {
             vectors: TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape),
             words: words
         }
+    }
+
+    async trainStep() {
+
+    }
+
+
+
+    timeout() {
+        return new Promise(resolve => setTimeout(resolve, 500));
     }
 }
 

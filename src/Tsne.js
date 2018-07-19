@@ -29,7 +29,7 @@ export default class Tsne extends EventEmitter{
                 // msg.data[0] + 1
                 break;
             case 'PROGRESS_DATA':
-                this.emit("PROGRESS_DATA", msg.data)
+                // this.emit("PROGRESS_DATA", msg.data)
                 // msg.data
                 break;
             case 'STATUS':
@@ -38,6 +38,9 @@ export default class Tsne extends EventEmitter{
                 }
                 break;
             case 'DONE':
+                this.emit("PROGRESS_DATA", msg.data)
+
+
                 // drawUpdate(msg.data);
                 break;
             default:

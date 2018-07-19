@@ -7,8 +7,7 @@
     constructor({ canvas, width, height}) {
 
         this.train = new Train()
-        this.train.on("PREPROCESSED", this.onTrainingPreprocessed.bind(this))
-        this.train.on("UPDATE", this.onTrainingProgressData.bind(this))
+
         this.renderer = new Renderer({
             canvas: canvas,
             width: width,
@@ -18,23 +17,16 @@
         this.tsne = new Tsne()
         this.tsne.on("PROGRESS_DATA", this.onProgressData.bind(this))
     }
-    onTrainingPreprocessed(words) {
-        this.renderer.setup(words)
-    }
-
-    onTrainingProgressData(vectors) {
-        this.tsne.start(vectors)
-    }
 
     onProgressData(progressData) {
-        // console.log(progressData)
-        // console.log(progressData)
         this.renderer.update(progressData)
     }
 
-    async process(text) {
+    process(text) {
         this.train.setText(text)
-        const {vectors, words} = await this.train.train()
+        const {vectors, words} = this.train.train()
+        this.tsne.start(vectors)
+        this.renderer.setup(words)
     }
 
     resize({ width, height }) {

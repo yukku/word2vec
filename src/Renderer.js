@@ -65,7 +65,7 @@ export default class Renderer{
     }
 
     update(data) {
-
+        // console.log(data)
         const scale = 180
         this.meshes.forEach((mesh, index) => {
             mesh.position.x = data[index][0] * scale
