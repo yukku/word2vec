@@ -11,7 +11,7 @@ export default class Train extends EventEmitter{
 
     constructor() {
         super()
-
+        tf.setBackend("cpu")
         this.model = new Model()
         this.corpus = ""
     }
