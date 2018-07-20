@@ -1,7 +1,6 @@
 import * as THREE from "three"
 if(!global.THREE) global.THREE = THREE
 import TweenLite from "gsap"
-console.log(TweenLite)
 import RendererUtil from "./RendererUtil.js"
 require("./lib/three/examples/js/controls/OrbitControls.js")
 

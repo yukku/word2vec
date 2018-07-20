@@ -5,7 +5,7 @@ import TrainUtil from "./TrainUtil.js"
 import Model from "./Model.js"
 import EventEmitter from "eventemitter3"
 
-const TRAINING_STEPS = 500
+const TRAINING_STEPS = 10
 
 export default class Train extends EventEmitter{
 
@@ -34,61 +34,28 @@ export default class Train extends EventEmitter{
         this.xs = tf.tensor2d(xTrainData, [data.length, words.length]);
         this.ys = tf.tensor2d(yTrainData, [data.length, words.length]);
 
-        // const loss = (pred, label) => pred.sub(label).square().mean();
-        this.loss = (pred, label) => tf.losses.softmaxCrossEntropy(label, pred).mean();
-
         this.emit("PREPROCESSED", words)
 
-        // this.optimizer = tf.train.sgd(0.01);
-        this.optimizer = tf.train.adam();
-
+        const EMBEDDING_DIM = 5
+        this.model = tf.sequential();
+        this.model.add(tf.layers.dense({units: EMBEDDING_DIM, inputShape: [words.length]}));
+        this.model.add(tf.layers.dense({units: words.length}))
+        this.model.compile({loss: 'meanSquaredError', optimizer: 'adam'});
 
         for(let i=0; i < TRAINING_STEPS; i++) {
             await this.trainOneStep(false)
         }
-        // const loss = (pred, label) => tf.softmax(label);
-        // const optimizer = tf.train.sgd(1.0);
 
-        // const {W1, b1} = this.model.getLayers()
-        // const vectors = tf.add(W1, b1)
-
-        // const closestIndex = TrainUtil.findClosest(word2int['king'], vectors.shape, vectors.dataSync())
-        // // console.log(closestIndex)
-        // const closest = int2word[closestIndex]
-        // console.log(closest)
-
-        // return {
-        //     vectors: TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape),
-        //     words: words
-        // }
     }
 
     async trainOneStep(emit = true) {
-
-        this.optimizer.minimize(() => {
-            const result = this.loss(this.model.predict(this.xs), this.ys)
-
-            const {W1, b1} = this.model.getLayers()
-            const vectors = tf.add(W1, b1)
-
-            if(emit) this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
-
-            console.log("loss", result.dataSync()[0])
-            return result
-        });
+        const history =  await this.model.fit(this.xs, this.ys, {epochs: 1})
+        const vectors = tf.add(this.model.layers[0].weights[0].val, this.model.layers[0].weights[1].val)
+        if(emit) this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
+        console.log("loss", history.history.loss[0])
         await tf.nextFrame()
         // await this.timeout()
 
     }
 
-
-
-    timeout() {
-        return new Promise(resolve => setTimeout(resolve, 1500));
-    }
 }
-
-
-
-// Initialize the tsne optimizer
-
