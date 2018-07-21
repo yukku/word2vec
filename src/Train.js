@@ -5,13 +5,13 @@ import TrainUtil from "./TrainUtil.js"
 import Model from "./Model.js"
 import EventEmitter from "eventemitter3"
 
-const TRAINING_STEPS = 10
+const TRAINING_STEPS = 10000
 
 export default class Train extends EventEmitter{
 
     constructor() {
         super()
-        tf.setBackend("cpu")
+        // tf.setBackend("cpu")
         this.model = new Model()
         this.corpus = ""
     }
@@ -39,7 +39,7 @@ export default class Train extends EventEmitter{
         const EMBEDDING_DIM = 5
         this.model = tf.sequential();
         this.model.add(tf.layers.dense({units: EMBEDDING_DIM, inputShape: [words.length]}));
-        this.model.add(tf.layers.dense({units: words.length}))
+        this.model.add(tf.layers.dense({units: words.length, activation: 'softmax'}))
         this.model.compile({loss: 'meanSquaredError', optimizer: 'adam'});
 
         for(let i=0; i < TRAINING_STEPS; i++) {
@@ -54,8 +54,12 @@ export default class Train extends EventEmitter{
         if(emit) this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
         console.log("loss", history.history.loss[0])
         await tf.nextFrame()
-        // await this.timeout()
+        await this.timeout()
 
+    }
+
+    timeout() {
+        return new Promise(resolve => setTimeout(resolve, 60));
     }
 
 }
