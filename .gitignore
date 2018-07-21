@@ -1,12 +1,13 @@
 .ideas
 package-lock.json
 public
+log
 exported
 node_modules
 .idea/
 .idea/workspace.xml
 **/.DS_Store
-
+.Python
 
 # Logs
 logs

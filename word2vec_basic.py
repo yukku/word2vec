@@ -50,6 +50,8 @@ FLAGS, unparsed = parser.parse_known_args()
 if not os.path.exists(FLAGS.log_dir):
   os.makedirs(FLAGS.log_dir)
 
+# Step 1: Download the data.
+
 filename = "/Users/yukik/Downloads/text8.zip"
 
 # Read the data into a list of strings.
@@ -219,9 +221,11 @@ with graph.as_default():
   saver = tf.train.Saver()
 
 # Step 5: Begin training.
-num_steps = 100001
+num_steps = 100
+# num_steps = 100001
 
 with tf.Session(graph=graph) as session:
+
   # Open a writer to write summaries.
   writer = tf.summary.FileWriter(FLAGS.log_dir, session.graph)
 
@@ -280,9 +284,10 @@ with tf.Session(graph=graph) as session:
     for i in xrange(vocabulary_size):
       f.write(reverse_dictionary[i] + '\n')
 
-  # Save the model for checkpoints.
-  saver.save(session, os.path.join(FLAGS.log_dir, 'model.ckpt'))
 
+  # Save the model for checkpoints.
+  # saver.save(session, os.path.join(FLAGS.log_dir, 'model.ckpt'))
+  tf.saved_model.simple_save(session, "./saved_model", inputs={"train_inputs": train_inputs, "train_labels": train_labels}, outputs={"embed": embed })
   # Create a configuration for visualizing embeddings with the labels in TensorBoard.
   config = projector.ProjectorConfig()
   embedding_conf = config.embeddings.add()

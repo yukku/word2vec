@@ -19,6 +19,8 @@
   "homepage": "https://github.com/yukku/word2vec#readme",
   "dependencies": {
     "@tensorflow/tfjs": "^0.12.2",
+    "@tensorflow/tfjs-converter": "^0.5.2",
+    "@tensorflow/tfjs-node": "^0.1.9",
     "@tensorflow/tfjs-tsne": "^0.2.0",
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
