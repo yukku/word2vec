@@ -1,6 +1,6 @@
-import tf from '@tensorflow/tfjs'
+import * as tf from '@tensorflow/tfjs'
 import "@tensorflow/tfjs-node"
-import Trainer from "./src/Trainer.mjs"
+import Trainer from "./src/Trainer.js"
 import fs from "fs"
 
 const TRAINING_STEPS = 1

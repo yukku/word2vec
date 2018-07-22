@@ -1,4 +1,4 @@
- import Train from "./Train.js"
+ import Trainer from "./Trainer.js"
  import Renderer from "./Renderer.js"
  import Tsne from "./Tsne.js"
 
@@ -6,9 +6,9 @@
 
     constructor({ canvas, width, height}) {
 
-        this.train = new Train()
-        this.train.on("PREPROCESSED", this.onTrainingPreprocessed.bind(this))
-        this.train.on("UPDATE", this.onTrainingProgressData.bind(this))
+        this.trainer = new Trainer()
+        this.trainer.on("PREPROCESSED", this.onTrainingPreprocessed.bind(this))
+        this.trainer.on("UPDATE", this.onTrainingProgressData.bind(this))
         this.renderer = new Renderer({
             canvas: canvas,
             width: width,
@@ -20,9 +20,8 @@
     }
 
     async process(text) {
-        this.train.setText(text)
-        await this.train.preprocess()
-        this.train.trainOneStep()
+        await this.trainer.preprocess(text)
+        this.trainer.train(true)
     }
 
     onTrainingPreprocessed(words) {
@@ -35,8 +34,8 @@
 
     async onProgressData(progressData) {
         this.renderer.update(progressData)
-        // await this.timeout()
-        this.train.trainOneStep()
+        await this.timeout()
+        this.trainer.train(true)
 
     }
 

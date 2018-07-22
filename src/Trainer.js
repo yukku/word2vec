@@ -1,7 +1,7 @@
-import tf from '@tensorflow/tfjs'
+import * as tf from '@tensorflow/tfjs'
 import _ from 'lodash'
 import TSNE from 'tsne-js'
-import TrainUtil from "./TrainUtil.mjs"
+import TrainUtil from "./TrainUtil.js"
 import EventEmitter from "eventemitter3"
 
 const EMBEDDING_DIM = 5
@@ -24,8 +24,6 @@ export default class Train extends EventEmitter{
         this.xs = tf.tensor2d(xTrainData, [data.length, words.length]);
         this.ys = tf.tensor2d(yTrainData, [data.length, words.length]);
 
-        this.emit("PREPROCESSED", words)
-
         if(modelPath) {
             this.model = await tf.loadModel(modelPath);
             this.model.compile({loss: 'categoricalCrossentropy', optimizer: 'adam'});
@@ -35,6 +33,8 @@ export default class Train extends EventEmitter{
             this.model.add(tf.layers.dense({units: words.length, activation: 'softmax'}))
             this.model.compile({loss: 'categoricalCrossentropy', optimizer: 'adam'});
         }
+
+        this.emit("PREPROCESSED", words)
     }
 
     async train(emit = false) {

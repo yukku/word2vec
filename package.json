@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "train": "node --experimental-modules train.mjs",
+    "train": "./node_modules/.bin/babel-node --presets es2015 train.js",
     "build": "./node_modules/.bin/gulp build",
     "serve": "./node_modules/.bin/gulp serve"
   },
@@ -31,6 +31,7 @@
     "babel-plugin-transform-remove-console": "^6.9.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-es2015-rollup": "^3.0.0",
+    "babel-preset-mjs": "0.0.4",
     "babelify": "^8.0.0",
     "base64-to-image": "^1.0.2",
     "browser-sync": "^2.18.13",
