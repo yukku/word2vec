@@ -4,7 +4,7 @@ import TSNE from 'tsne-js'
 import TrainUtil from "./TrainUtil.js"
 import EventEmitter from "eventemitter3"
 
-const EMBEDDING_DIM = 5
+const EMBEDDING_DIM = 2
 
 export default class Train extends EventEmitter{
 
@@ -12,7 +12,7 @@ export default class Train extends EventEmitter{
         super()
     }
 
-    async preprocess(corpus, modelPath) {
+    async preprocess(corpus, modelPath = false) {
 
         const words = TrainUtil.getUniqueWords(corpus)
         const sentences = TrainUtil.getSentences(corpus)
@@ -26,15 +26,18 @@ export default class Train extends EventEmitter{
 
         if(modelPath) {
             this.model = await tf.loadModel(modelPath);
-            this.model.compile({loss: 'categoricalCrossentropy', optimizer: 'adam'});
+            this.model.compile({loss: 'meanSquaredError', optimizer: 'adam'});
+            this.emitHiddenLayer()
         }else{
             this.model = tf.sequential();
             this.model.add(tf.layers.dense({units: EMBEDDING_DIM, inputShape: [words.length]}));
-            this.model.add(tf.layers.dense({units: words.length, activation: 'softmax'}))
-            this.model.compile({loss: 'categoricalCrossentropy', optimizer: 'adam'});
+            this.model.add(tf.layers.dense({units: EMBEDDING_DIM, inputShape: [100], activation: 'relu'}))
+            this.model.add(tf.layers.dense({units: words.length, activation: 'sigmoid'}))
+            this.model.compile({loss: 'meanSquaredError', optimizer: 'sgd'});
         }
 
         this.emit("PREPROCESSED", words)
+        this.emitHiddenLayer()
     }
 
     async train(emit = false) {
@@ -42,17 +45,18 @@ export default class Train extends EventEmitter{
         const history =  await this.model.fit(this.xs, this.ys, {epochs: 1})
         console.log("loss", history.history.loss[0])
 
-        if(emit) {
-            const vectors = tf.add(this.model.layers[0].weights[0].val, this.model.layers[0].weights[1].val)
-            this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
-        }
-
+        if(emit) this.emitHiddenLayer()
         await tf.nextFrame()
     }
 
     async save(path) {
         const result = await this.model.save(path)
         console.log(result)
+    }
+
+    emitHiddenLayer() {
+        const vectors = tf.add(this.model.layers[0].weights[0].val, this.model.layers[0].weights[1].val)
+        this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
     }
 
     timeout() {

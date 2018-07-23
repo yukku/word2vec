@@ -61,7 +61,7 @@ export default class Renderer{
         })
 
         this.scene.add(new THREE.AmbientLight(0xffffff, 1));
-
+        // this.render()
         this.animate()
     }
 
@@ -74,7 +74,7 @@ export default class Renderer{
                 y: data[index][1] * scale,
                 z: data[index][2] * scale,
                 ease: Power2.easeOut,
-                // onUpdate: this.update.bind(this),
+                // onUpdate: this.render.bind(this),
                 // onComplete: () => {
                 //     this.endAnimateExtreme()
                 // }

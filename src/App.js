@@ -20,15 +20,21 @@
     }
 
     async process(text) {
+        // await this.trainer.preprocess(text, "http://localhost:4000/my-model-1/model.json")
         await this.trainer.preprocess(text)
         this.trainer.train(true)
     }
 
     onTrainingPreprocessed(words) {
+        // const capped = words.splice(0, 100)
+        // this.renderer.setup(capped)
         this.renderer.setup(words)
     }
 
     onTrainingProgressData(vectors) {
+        // const capped = vectors.splice(0, 100)
+        // console.log(capped)
+        // this.tsne.process(capped)
         this.tsne.process(vectors)
     }
 
@@ -44,7 +50,7 @@
     }
 
     timeout() {
-        return new Promise(resolve => setTimeout(resolve, 500));
+        return new Promise(resolve => setTimeout(resolve, 5500));
     }
 }
 

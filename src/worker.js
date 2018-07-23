@@ -20,8 +20,8 @@ const model = new TSNE({
     dim: 3,
     perplexity: 30.0,
     earlyExaggeration: 1.0,
-    learningRate: 100.0,
-    nIter: 200,
+    learningRate: 10.0,
+    nIter: 300,
     metric: 'euclidean'
 });
 // console.log(model)
