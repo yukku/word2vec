@@ -31,7 +31,7 @@ export default class Train extends EventEmitter{
         }else{
             this.model = tf.sequential();
             this.model.add(tf.layers.dense({units: EMBEDDING_DIM, inputShape: [words.length]}));
-            this.model.add(tf.layers.dense({units: EMBEDDING_DIM, inputShape: [100], activation: 'relu'}))
+            this.model.add(tf.layers.dense({units: EMBEDDING_DIM, activation: 'relu'}))
             this.model.add(tf.layers.dense({units: words.length, activation: 'sigmoid'}))
             this.model.compile({loss: 'meanSquaredError', optimizer: 'sgd'});
         }
