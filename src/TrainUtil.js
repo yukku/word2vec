@@ -95,16 +95,37 @@ export default class TrainUtil{
         for(var i=0; i<shape[0]; i++) {
             const vector = vectors.slice(i*shape[1], i*shape[1] + shape[1])
             const distance = euclideanDistance(vector, queryVector)
-            // console.log("---")
-            // console.log(wordIndex)
-            // console.log(distance)
-            // console.log(i)
             if(distance < minDist && !_.isEqual(vector.sort(), queryVector.sort())) {
                 minDist = distance
                 minIndex = i
             }
         }
         return minIndex
+    }
+
+    static findCloser(wordIndex, shape, vectors) {
+        const cap = 9
+        let minDist = 10000
+        let minIndex = -1
+        const result = []
+
+        const queryVector = vectors.slice(wordIndex*shape[1], wordIndex*shape[1] + shape[1])
+        for(var i=0; i<shape[0]; i++) {
+            const vector = vectors.slice(i*shape[1], i*shape[1] + shape[1])
+            const distance = euclideanDistance(vector, queryVector)
+            if(distance < minDist && !_.isEqual(vector.sort(), queryVector.sort())) {
+                result.push({
+                    index: i,
+                    distance: distance
+                })
+            }
+        }
+        result.sort((a, b) => {
+            if (a.distance < b.distance) return -1
+            if (a.distance > b.distance) return 1
+            return 0
+        })
+        return result.splice(0, cap)
     }
 
 }

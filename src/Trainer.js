@@ -17,6 +17,9 @@ export default class Train extends EventEmitter{
         const words = TrainUtil.getUniqueWords(corpus)
         const sentences = TrainUtil.getSentences(corpus)
         const {word2int, int2word} = TrainUtil.getDictionary(words)
+        this.word2int = word2int
+        this.int2word = int2word
+
         const data = TrainUtil.getTrainData(sentences)
         const xTrainData = TrainUtil.getOneHotData(data, words, word2int, 0)
         const yTrainData = TrainUtil.getOneHotData(data, words, word2int, 1)
@@ -25,6 +28,7 @@ export default class Train extends EventEmitter{
         this.ys = tf.tensor2d(yTrainData, [data.length, words.length]);
 
         if(modelPath) {
+            console.log("existing model loading")
             this.model = await tf.loadModel(modelPath);
             this.model.compile({loss: 'meanSquaredError', optimizer: 'adam'});
             this.emitHiddenLayer()
@@ -55,8 +59,32 @@ export default class Train extends EventEmitter{
     }
 
     emitHiddenLayer() {
-        const vectors = tf.add(this.model.layers[0].weights[0].val, this.model.layers[0].weights[1].val)
-        this.emit("UPDATE", TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape))
+        this.emit("UPDATE", this.getHiddenLayerAsArray2d())
+    }
+
+    getHiddenLayerAsArray2d() {
+        const vectors = this.getHiddenLayerVector()
+        return TrainUtil.convertTo2dArray(vectors.dataSync(), vectors.shape)
+    }
+
+    getHiddenLayerVector() {
+        return tf.add(this.model.layers[0].weights[0].val, this.model.layers[0].weights[1].val)
+    }
+
+    findClosest(word) {
+        const vectors = this.getHiddenLayerVector()
+        const closestIndex = TrainUtil.findClosest(this.word2int[word], vectors.shape, vectors.dataSync())
+        const closestWord = this.int2word[closestIndex]
+        return closestWord
+    }
+
+    findCloser(word) {
+        const vectors = this.getHiddenLayerVector()
+        const closerArray = TrainUtil.findCloser(this.word2int[word], vectors.shape, vectors.dataSync())
+        const closestWords = closerArray.map(wordObj => {
+            return this.int2word[wordObj.index]
+        })
+        return closestWords
     }
 
     timeout() {
