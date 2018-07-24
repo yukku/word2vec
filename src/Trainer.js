@@ -4,7 +4,7 @@ import TSNE from 'tsne-js'
 import TrainUtil from "./TrainUtil.js"
 import EventEmitter from "eventemitter3"
 
-const EMBEDDING_DIM = 2
+const EMBEDDING_DIM = 200
 
 export default class Train extends EventEmitter{
 
@@ -28,16 +28,15 @@ export default class Train extends EventEmitter{
         this.ys = tf.tensor2d(yTrainData, [data.length, words.length]);
 
         if(modelPath) {
-            console.log("existing model loading")
+            console.info("loading existing model")
             this.model = await tf.loadModel(modelPath);
             this.model.compile({loss: 'meanSquaredError', optimizer: 'adam'});
             this.emitHiddenLayer()
         }else{
             this.model = tf.sequential();
             this.model.add(tf.layers.dense({units: EMBEDDING_DIM, inputShape: [words.length]}));
-            this.model.add(tf.layers.dense({units: EMBEDDING_DIM, activation: 'relu'}))
-            this.model.add(tf.layers.dense({units: words.length, activation: 'sigmoid'}))
-            this.model.compile({loss: 'meanSquaredError', optimizer: 'sgd'});
+            this.model.add(tf.layers.dense({units: words.length, activation: 'softmax'}))
+            this.model.compile({loss: 'meanSquaredError', optimizer: 'adam'});
         }
 
         this.emit("PREPROCESSED", words)
@@ -47,7 +46,7 @@ export default class Train extends EventEmitter{
     async train(emit = false) {
 
         const history =  await this.model.fit(this.xs, this.ys, {epochs: 1})
-        console.log("loss", history.history.loss[0])
+        console.info("loss", history.history.loss[0])
 
         if(emit) this.emitHiddenLayer()
         await tf.nextFrame()
@@ -55,7 +54,7 @@ export default class Train extends EventEmitter{
 
     async save(path) {
         const result = await this.model.save(path)
-        console.log(result)
+        console.info(result)
     }
 
     emitHiddenLayer() {

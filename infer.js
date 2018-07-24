@@ -10,8 +10,6 @@ const MODEL_FILE_PATH = "/Users/yukik/Projects/word2vec/public/my-model-1"
 export default class NodeInfer{
     constructor() {
         this.trainer = new Trainer()
-        // this.train.on("PREPROCESSED", this.onTrainingPreprocessed.bind(this))
-        // this.train.on("UPDATE", this.onTrainingProgressData.bind(this))
     }
 
     async start() {

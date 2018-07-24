@@ -3,15 +3,13 @@ import "@tensorflow/tfjs-node"
 import Trainer from "./src/Trainer.js"
 import fs from "fs"
 
-const TRAINING_STEPS = 2000
+const TRAINING_STEPS = 1
 const MODEL_SYSTEM_PATH = "file:///Users/yukik/Projects/word2vec/public/my-model-1"
 const MODEL_FILE_PATH = "/Users/yukik/Projects/word2vec/public/my-model-1"
 
 export default class NodeTrain{
     constructor() {
         this.trainer = new Trainer()
-        // this.train.on("PREPROCESSED", this.onTrainingPreprocessed.bind(this))
-        // this.train.on("UPDATE", this.onTrainingProgressData.bind(this))
     }
 
     async start() {
