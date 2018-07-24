@@ -3,7 +3,7 @@ import "@tensorflow/tfjs-node"
 import Trainer from "./src/Trainer.js"
 import fs from "fs"
 
-const TRAINING_STEPS = 1
+const TRAINING_STEPS = 30
 const MODEL_SYSTEM_PATH = "file:///Users/yukik/Projects/word2vec/public/my-model-1"
 const MODEL_FILE_PATH = "/Users/yukik/Projects/word2vec/public/my-model-1"
 
@@ -20,6 +20,11 @@ export default class NodeTrain{
 
         for(let i=0; i < TRAINING_STEPS; i++) {
             console.log("training steps", i)
+            if(i%10 == 0){
+                console.log("love", this.trainer.findCloser("love"))
+                console.log("baby", this.trainer.findCloser("baby"))
+                console.log("money", this.trainer.findCloser("money"))
+            }
             await this.trainer.train()
         }
 
