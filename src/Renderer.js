@@ -18,7 +18,7 @@ export default class Renderer {
     this.scene = new THREE.Scene();
     const fogColor = new THREE.Color(0x000000);
     this.scene.background = fogColor;
-    this.scene.fog = new THREE.Fog(fogColor, 1, 300);
+    this.scene.fog = new THREE.Fog(fogColor, 1, 500);
 
     this.camera = new THREE.PerspectiveCamera(70, width / height, 1, 100000);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -27,16 +27,16 @@ export default class Renderer {
     this.controls.autoRotate = true;
     this.controls.autoRotateSpeed = 0.1;
     this.controls.zoomSpeed = 0.5;
-    this.controls.maxDistance = 550;
+    this.controls.maxDistance = 360;
   }
 
-  async setup(words) {
+  async setup(labels) {
     const font = await RendererUtil.loadFont(
       "fonts/droid/droid_sans_regular.typeface.json"
     );
 
-    this.meshes = words.map(word => {
-      const geometry = new THREE.TextGeometry(word, {
+    this.meshes = labels.map(label => {
+      const geometry = new THREE.TextGeometry(label, {
         font: font,
         size: 1.7,
         height: 0,
@@ -50,9 +50,7 @@ export default class Renderer {
       const material = new THREE.MeshPhongMaterial({
         color: 0xffffff
       });
-      const mesh = new THREE.Mesh(geometry, material);
-
-      return mesh;
+      return new THREE.Mesh(geometry, material);
     });
 
     this.meshes.forEach(mesh => {
@@ -60,13 +58,13 @@ export default class Renderer {
     });
 
     this.scene.add(new THREE.AmbientLight(0xffffff, 1));
-    // this.render()
+
     this.animate();
   }
 
   update(data) {
-    // console.log(data)
-    const scale = 180;
+     // console.log(data)
+    const scale = 10;
     this.meshes.forEach((mesh, index) => {
       // console.log(data[index])
       if (data[index]) {

@@ -50,8 +50,7 @@ module.exports = {
     serve: function(gulp, browserSync, timestamp){
 
         var files = [
-            'main.js',
-            'worker.js'
+            'main.js'
         ];
 
         var tasks = files.map(function(entry) {
