@@ -23,7 +23,7 @@ export default class Renderer {
     this.camera = new THREE.PerspectiveCamera(70, width / height, 1, 100000);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
     this.camera.position.z = 200;
-    this.controls = new THREE.OrbitControls(this.camera);
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.autoRotate = true;
     this.controls.autoRotateSpeed = 0.1;
     this.controls.zoomSpeed = 0.5;
@@ -68,11 +68,11 @@ export default class Renderer {
     this.meshes.forEach((mesh, index) => {
       // console.log(data[index])
       if (data[index]) {
-        TweenLite.to(mesh.position, 0.6, {
+        TweenLite.to(mesh.position, 1, {
           x: data[index][0] * scale,
           y: data[index][1] * scale,
           z: data[index][2] * scale,
-          ease: Power2.easeOut
+          ease: Power2.easeInOut
           // onUpdate: this.render.bind(this),
           // onComplete: () => {
           //     this.endAnimateExtreme()
