@@ -1,5 +1,5 @@
 import Renderer from "./Renderer.js";
-import * as dat from 'dat.gui';
+import * as dat from "dat.gui";
 
 const ENABLE_RENDER = true;
 const GuiData = function() {
@@ -8,13 +8,18 @@ const GuiData = function() {
 
 export default class App {
   constructor({ canvas, width, height }) {
-    this.weights = [];
-    this.gui = new dat.GUI({name: 'Controller'});    
-    this.gui.domElement.style.cssText = "position: absolute; top: 2px; left: 2px"
+    this.positions = [];
+    this.gui = new dat.GUI({ name: "Controller" });
+    this.gui.domElement.style.cssText =
+      "position: absolute; top: 2px; left: 2px";
     this.guiData = new GuiData();
-    this.controller = this.gui.add(this.guiData, "word2vec-model", { "wiki": 0, "google-news" : 1, "gigaword" : 2} );
-    this.controller.onChange(this.onModelChange.bind(this))
-    this.controller.onFinishChange(this.onModelFinishChange.bind(this))
+    this.controller = this.gui.add(this.guiData, "word2vec-model", {
+      wiki: 0,
+      "google-news": 1,
+      gigaword: 2
+    });
+    this.controller.onChange(this.onModelChange.bind(this));
+    this.controller.onFinishChange(this.onModelFinishChange.bind(this));
 
     if (!ENABLE_RENDER) return;
     this.renderer = new Renderer({
@@ -22,34 +27,40 @@ export default class App {
       width: width,
       height: height
     });
-    
   }
 
   onModelChange(value) {
-    this.renderer.update(this.weights[value]);
+    if (!ENABLE_RENDER) return;
+    this.renderer.update(this.positions[value]);
   }
 
   onModelFinishChange(value) {
-
+    if (!ENABLE_RENDER) return;
   }
 
   async setLabels(labels) {
     if (!ENABLE_RENDER) return;
+
     await this.renderer.setup(labels);
   }
-  
-  addWeight(weight) {
+
+  addPosition(position) {
     if (!ENABLE_RENDER) return;
-    this.weights.push(weight)
+    this.positions.push(position);
   }
 
   async start() {
     if (!ENABLE_RENDER) return;
-    this.renderer.update(this.weights[0]);
+    this.renderer.update(this.positions[0]);
+  }
+
+  onMouseMove(x, y) {
+    if (!ENABLE_RENDER) return;
+    this.renderer.setMousePositions(x, y);
   }
 
   resize({ width, height }) {
-    if (ENABLE_RENDER) this.renderer.resize({ width, height });
+    if (!ENABLE_RENDER) return;
+    this.renderer.resize({ width, height });
   }
-
 }

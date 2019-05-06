@@ -11,7 +11,24 @@ module.exports = {
     filename: "main.js",
     path: path.resolve(__dirname, DIST_DIR)
   },
-
+  optimization: {
+    splitChunks: {
+      chunks: "all"
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(glsl|vs|fs|vert|frag)$/,
+        loader: "shader-loader",
+        options: {
+          glsl: {
+            // chunkPath: resolve("/glsl/chunks")
+          }
+        }
+      }
+    ]
+  },
   plugins: [
     new CopyPlugin([
       {
@@ -19,6 +36,8 @@ module.exports = {
         to: path.join(__dirname, DIST_DIR)
       }
     ]),
-    new HtmlWebpackPlugin()
+    new HtmlWebpackPlugin({
+      title: "word2vec experiment"
+    })
   ]
 };

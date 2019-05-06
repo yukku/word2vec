@@ -15,8 +15,22 @@ module.exports = {
   devServer: {
     contentBase: path.join(__dirname, DIST_DIR),
     compress: true,
-    hot: true,
+    // hot: true,
+    host: "0.0.0.0",
     port: 4000
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(glsl|vs|fs|vert|frag)$/,
+        loader: "shader-loader",
+        options: {
+          glsl: {
+            // chunkPath: resolve("/glsl/chunks")
+          }
+        }
+      }
+    ]
   },
   plugins: [
     new CopyPlugin([
@@ -25,7 +39,7 @@ module.exports = {
         to: path.join(__dirname, DIST_DIR)
       }
     ]),
-    new HtmlWebpackPlugin(),
-    new webpack.HotModuleReplacementPlugin()
+    new HtmlWebpackPlugin()
+    // new webpack.HotModuleReplacementPlugin()
   ]
 };
