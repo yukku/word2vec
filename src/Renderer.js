@@ -2,6 +2,7 @@ import * as THREE from "three";
 if (!global.THREE) global.THREE = THREE;
 import TweenLite from "gsap";
 import RendererUtil from "./RendererUtil.js";
+import _ from "lodash";
 
 require("./lib/three/examples/js/controls/OrbitControls.js");
 
@@ -41,10 +42,11 @@ export default class Renderer {
     this.controls.zoomSpeed = 0.5;
     this.controls.maxDistance = 360;
 
-    this.render = this.render.bind(this);
+    this.render = _.throttle(this.render.bind(this), 1000 / 30);
 
-    // canvas.addEventListener("mousemove", this.render, false);
-    // canvas.addEventListener("wheel", this.render, false);
+    canvas.addEventListener("mousemove", this.render, false);
+    canvas.addEventListener("wheel", this.render, false);
+    canvas.addEventListener("touchmove", this.render, false);
   }
 
   createCanvasTexture(text, width, height) {
@@ -71,19 +73,14 @@ export default class Renderer {
     await font.load();
     document.fonts.add(font);
 
-    this.meshes = labels.map(label => {
+    this.meshes = labels.map((label, index) => {
       const ratio = 1024 / 64;
       const textureSize = 1024;
-      return new THREE.Mesh(
+      const mesh = new THREE.Mesh(
         new THREE.PlaneGeometry(60, 60 / ratio, 1, 1),
         new THREE.ShaderMaterial({
           transparent: true,
-          // color: 0xffffff,
           side: THREE.FrontSide,
-          // blendEquation: THREE.SubtractEquation,
-          // blending: THREE.CustomBlending,
-          // blendSrc: THREE.OneFactor,
-          // blendDst: THREE.OneFactor,
           depthTest: true,
           uniforms: {
             wordTexture: {
@@ -95,7 +92,8 @@ export default class Renderer {
               )
             },
             fogNear: { type: "f", value: this.scene.fog.near },
-            fogFar: { type: "f", value: this.scene.fog.far }
+            fogFar: { type: "f", value: this.scene.fog.far },
+            highlightIntensity: { type: "f", value: 0.0 }
           },
           fragmentShader: fragmentShader,
           vertexShader: vertexShader
@@ -104,29 +102,8 @@ export default class Renderer {
         //   map: this.createCanvasTexture(label, textureSize, textureSize / ratio)
         // })
       );
-      //       const group = new THREE.Group();
-      //
-      //       const geometry = new THREE.TextGeometry(label, {
-      //         font: font,
-      //         size: 1.7,
-      //         height: 0,
-      //         curveSegments: 1,
-      //         bevelEnabled: false,
-      //         bevelThickness: 0,
-      //         bevelSize: 0,
-      //         bevelSegments: 1
-      //       });
-      //       geometry.center();
-      //
-      //
-      //       const material = new THREE.MeshPhongMaterial({
-      //         color: 0xffffff
-      //       });
-      //       const typo = new THREE.Mesh(geometry, material);
-      //
-      //       group.add(typo);
-      //
-      //       return typo;
+      mesh.name = index;
+      return mesh;
     });
 
     this.meshes.forEach(mesh => {
@@ -164,24 +141,60 @@ export default class Renderer {
   }
 
   animate() {
-    requestAnimationFrame(this.animate.bind(this));
+    // requestAnimationFrame(this.animate.bind(this));
     this.render();
   }
 
   render() {
-    this.renderer.render(this.scene, this.camera);
+    if (!this.meshes) return;
     this.meshes.forEach((mesh, index) => {
       mesh.rotation.x = this.camera.rotation.x;
       mesh.rotation.y = this.camera.rotation.y;
       mesh.rotation.z = this.camera.rotation.z;
     });
+    this.renderer.render(this.scene, this.camera);
     this.controls.update();
 
-    // this.raycaster.setFromCamera(this.mouse, this.camera);
-    // const intersects = this.raycaster.intersectObjects(this.scene.children);
-    // for (let i = 0; i < intersects.length; i++) {
-    //   intersects[i].object.material.color.set(0xff0000);
-    // }
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.meshes);
+    // console.log(intersects.length);
+    this.onIntersect(intersects[0]);
+  }
+
+  onIntersect(intersect) {
+    if (intersect) {
+      document.body.style.cursor = "pointer";
+
+      this.onMouseOver(intersect.object);
+    } else {
+      document.body.style.cursor = "default";
+
+      this.meshes.forEach((mesh, index) => {
+        if (mesh.material.uniforms.highlightIntensity.value !== 0) {
+          TweenLite.to(mesh.material.uniforms.highlightIntensity, 0.2, {
+            value: 0.0
+          });
+        }
+      });
+    }
+  }
+
+  onMouseOver(object) {
+    TweenLite.to(object.material.uniforms.highlightIntensity, 0.3, {
+      value: 1.0,
+      onUpdate: this.render
+    });
+
+    this.meshes.forEach((mesh, index) => {
+      if (
+        mesh.name !== object.name &&
+        mesh.material.uniforms.highlightIntensity.value !== 0
+      ) {
+        TweenLite.to(mesh.material.uniforms.highlightIntensity, 0.2, {
+          value: 0.0
+        });
+      }
+    });
   }
 
   resize({ width, height }) {
