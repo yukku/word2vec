@@ -3,14 +3,16 @@ if (!global.THREE) global.THREE = THREE;
 import TweenLite from "gsap";
 import RendererUtil from "./RendererUtil.js";
 import _ from "lodash";
+import EventEmitter from "eventemitter3";
 
 require("./lib/three/examples/js/controls/OrbitControls.js");
 
 import fragmentShader from "./shaders/word.frag";
 import vertexShader from "./shaders/word.vert";
 
-export default class Renderer {
+export default class Renderer extends EventEmitter {
   constructor({ canvas, width, height }) {
+    super();
     this.renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       // alpha: true,
@@ -44,6 +46,9 @@ export default class Renderer {
 
     this.render = _.throttle(this.render.bind(this), 1000 / 30);
 
+    this.intersected = undefined;
+
+    canvas.addEventListener("mouseup", this.onMouseDown.bind(this), false);
     canvas.addEventListener("mousemove", this.render, false);
     canvas.addEventListener("wheel", this.render, false);
     canvas.addEventListener("touchmove", this.render, false);
@@ -93,7 +98,7 @@ export default class Renderer {
             },
             fogNear: { type: "f", value: this.scene.fog.near },
             fogFar: { type: "f", value: this.scene.fog.far },
-            highlightIntensity: { type: "f", value: 0.0 }
+            highlightIntensity: { type: "f", value: 1.0 }
           },
           fragmentShader: fragmentShader,
           vertexShader: vertexShader
@@ -162,20 +167,20 @@ export default class Renderer {
   }
 
   onIntersect(intersect) {
+    this.intersected = intersect;
+
     if (intersect) {
       document.body.style.cursor = "pointer";
-
-      this.onMouseOver(intersect.object);
+      // this.onMouseOver(intersect.object);
     } else {
       document.body.style.cursor = "default";
-
-      this.meshes.forEach((mesh, index) => {
-        if (mesh.material.uniforms.highlightIntensity.value !== 0) {
-          TweenLite.to(mesh.material.uniforms.highlightIntensity, 0.2, {
-            value: 0.0
-          });
-        }
-      });
+      // this.meshes.forEach((mesh, index) => {
+      //   if (mesh.material.uniforms.highlightIntensity.value !== 0) {
+      //     TweenLite.to(mesh.material.uniforms.highlightIntensity, 0.2, {
+      //       value: 0.0
+      //     });
+      //   }
+      // });
     }
   }
 
@@ -195,6 +200,33 @@ export default class Renderer {
         });
       }
     });
+  }
+
+  onMouseDown() {
+    if (this.intersected) {
+      this.emit("object-click", { index: this.intersected.object.name });
+    }
+  }
+
+  setObjectIntensity(targets) {
+    const targetIndices = targets.map(item => item[0]);
+    this.meshes.forEach((mesh, index) => {
+      if (targetIndices.includes(index)) {
+        TweenLite.to(mesh.material.uniforms.highlightIntensity, 0.2, {
+          value: targets.find(item => item[0] === index)[1],
+          onUpdate: this.render
+        });
+      } else {
+        mesh.material.uniforms.highlightIntensity.value = 0;
+      }
+    });
+  }
+
+  resetIntensity() {
+    this.meshes.forEach((mesh, index) => {
+      mesh.material.uniforms.highlightIntensity.value = 1.0;
+    });
+    this.render();
   }
 
   resize({ width, height }) {

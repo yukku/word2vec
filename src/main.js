@@ -1,26 +1,12 @@
 import App from "./App.js";
 
-import wikiData from "./datasets/word2vec-gigaword-out.json";
-import googleNewsData from "./datasets/word2vec-google-news-out.json";
-import gigawordData from "./datasets/word2vec-wiki-out.json";
+import wikiData from "./datasets/processed-word2vec-wiki-out.json";
+import googleNewsData from "./datasets/processed-word2vec-google-news-out.json";
+import gigawordData from "./datasets/processed-word2vec-gigaword-out.json";
 
 import wikiTsneData from "./datasets/processed-wiki-tsne-out.json";
 import googleNewsTsneData from "./datasets/processed-google-news-tsne-out.json";
 import gigawordTsneData from "./datasets/processed-gigaword-tsne-out.json";
-
-import math from "mathjs";
-
-// var targetVec = Object.values(wikiData[0])[0];
-//
-// const dotProducts = wikiData
-//   .map(data => {
-//     const vec = Object.values(data)[0];
-//     return math.dot(targetVec, vec);
-//   })
-//   .sort((a, b) => a - b);
-// console.log(dotProducts);
-// console.log(math.dot(vec1, vec2));
-// console.log(math.dot(vec1, vec3));
 
 const canvas = document.createElement("canvas");
 document.body.style.cssText =
@@ -69,10 +55,19 @@ const dataset1 = preprocessData(wikiTsneData);
 const dataset2 = preprocessData(googleNewsTsneData);
 const dataset3 = preprocessData(gigawordTsneData);
 
+const datasetFull1 = preprocessData(wikiData);
+const datasetFull2 = preprocessData(googleNewsData);
+const datasetFull3 = preprocessData(gigawordData);
+
 app.setLabels(dataset1.map(item => item.label)).then(() => {
   app.addPosition(dataset1.map(item => item.weight));
   app.addPosition(dataset2.map(item => item.weight));
   app.addPosition(dataset3.map(item => item.weight));
+
+  app.addWeight(datasetFull1.map(item => item.weight));
+  app.addWeight(datasetFull2.map(item => item.weight));
+  app.addWeight(datasetFull3.map(item => item.weight));
+
   app.start();
 });
 
