@@ -36,6 +36,7 @@ export default class App {
     });
     this.renderer.on("object-click", this.onObjectClick.bind(this));
     this.currentDatasetIndex = 0;
+    this.currentSelectedObjectIndex = 0;
   }
 
   reset() {
@@ -43,6 +44,7 @@ export default class App {
   }
 
   onObjectClick({ index }) {
+    this.currentSelectedObjectIndex = index;
     const targetVec = this.weights[this.currentDatasetIndex][index];
     const dotProducts = this.weights[this.currentDatasetIndex]
       .map((vector, currentIndex) => {
@@ -65,7 +67,7 @@ export default class App {
         };
       });
     console.log(
-      targetObjects.filter(item => item.distance > 0.6).map(item => item.label)
+      targetObjects.filter(item => item.distance > 0.55).map(item => item.label)
     );
     this.renderer.setObjectIntensity(
       targetObjects.map(item => [item.index, item.intensity])
@@ -76,6 +78,7 @@ export default class App {
     if (!ENABLE_RENDER) return;
     this.currentDatasetIndex = value;
     this.renderer.update(this.positions[this.currentDatasetIndex]);
+    this.onObjectClick({ index: this.currentSelectedObjectIndex });
   }
 
   onModelFinishChange(value) {
