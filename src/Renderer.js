@@ -48,7 +48,10 @@ export default class Renderer extends EventEmitter {
 
     this.intersected = undefined;
 
-    canvas.addEventListener("mouseup", this.onMouseDown.bind(this), false);
+    this.mouseDownPosition = new THREE.Vector2();
+
+    canvas.addEventListener("mousedown", this.onMouseDown.bind(this), false);
+    canvas.addEventListener("mouseup", this.onMouseUp.bind(this), false);
     canvas.addEventListener("mousemove", this.render, false);
     canvas.addEventListener("wheel", this.render, false);
     canvas.addEventListener("touchmove", this.render, false);
@@ -203,7 +206,16 @@ export default class Renderer extends EventEmitter {
   }
 
   onMouseDown() {
-    if (this.intersected) {
+    this.mouseDownPosition.x = this.mouse.x;
+    this.mouseDownPosition.y = this.mouse.y;
+  }
+
+  onMouseUp() {
+    if (
+      this.intersected &&
+      this.mouse.x === this.mouseDownPosition.x &&
+      this.mouse.y === this.mouseDownPosition.y
+    ) {
       this.emit("object-click", { index: this.intersected.object.name });
     }
   }

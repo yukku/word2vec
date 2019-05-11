@@ -36,14 +36,17 @@ export default class App {
     });
     this.renderer.on("object-click", this.onObjectClick.bind(this));
     this.currentDatasetIndex = 0;
-    this.currentSelectedObjectIndex = 0;
+    this.currentSelectedObjectIndex = undefined;
   }
 
   reset() {
+    this.currentSelectedObjectIndex = undefined;
     this.renderer.resetIntensity();
   }
 
   onObjectClick({ index }) {
+    if (!index) return;
+
     this.currentSelectedObjectIndex = index;
     const targetVec = this.weights[this.currentDatasetIndex][index];
     const dotProducts = this.weights[this.currentDatasetIndex]
@@ -66,9 +69,9 @@ export default class App {
           intensity: (item.distance - threshold) / threshold
         };
       });
-    console.log(
-      targetObjects.filter(item => item.distance > 0.55).map(item => item.label)
-    );
+    // console.log(
+    //   targetObjects.filter(item => item.distance > 0.55).map(item => item.label)
+    // );
     this.renderer.setObjectIntensity(
       targetObjects.map(item => [item.index, item.intensity])
     );
