@@ -67,6 +67,7 @@ export default class App {
         return {
           ...item,
           intensity: (item.distance - threshold) / threshold
+          // intensity: item.distance
         };
       });
     // console.log(

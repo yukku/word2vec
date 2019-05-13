@@ -14,9 +14,9 @@ export default class Renderer extends EventEmitter {
   constructor({ canvas, width, height }) {
     super();
     this.renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
+      canvas: canvas
       // alpha: true,
-      antialias: true
+      // antialias: true
     });
     // document.body.appendChild( this.renderer.domElement );
     this.renderer.setClearColor(0x000000, 0);
@@ -25,7 +25,7 @@ export default class Renderer extends EventEmitter {
     this.scene = new THREE.Scene();
     const fogColor = new THREE.Color(0x000000);
     this.scene.background = fogColor;
-    this.scene.fog = new THREE.Fog(fogColor, 1, 500);
+    this.scene.fog = new THREE.Fog(fogColor, 1, 450);
 
     this.camera = new THREE.PerspectiveCamera(70, width / height, 1, 100000);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -43,8 +43,15 @@ export default class Renderer extends EventEmitter {
     this.controls.autoRotateSpeed = 0.1;
     this.controls.zoomSpeed = 0.5;
     this.controls.maxDistance = 360;
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.2;
+    this.controls.rotateSpeed = 0.2;
 
     this.render = _.throttle(this.render.bind(this), 1000 / 30);
+    // this.animate = _.throttle(this.animate.bind(this), 1000 / 30);
+    //
+    // this.render = this.render.bind(this);
+    this.animate = this.animate.bind(this);
 
     this.intersected = undefined;
 
@@ -52,7 +59,7 @@ export default class Renderer extends EventEmitter {
 
     canvas.addEventListener("mousedown", this.onMouseDown.bind(this), false);
     canvas.addEventListener("mouseup", this.onMouseUp.bind(this), false);
-    canvas.addEventListener("mousemove", this.render, false);
+    // canvas.addEventListener("mousemove", this.render, false);
     canvas.addEventListener("wheel", this.render, false);
     canvas.addEventListener("touchmove", this.render, false);
   }
@@ -61,19 +68,16 @@ export default class Renderer extends EventEmitter {
     const textCtx = document.createElement("canvas").getContext("2d");
     textCtx.canvas.width = width;
     textCtx.canvas.height = height;
-    textCtx.font = "60px DroidSans";
+    textCtx.font = "40px DroidSans";
     textCtx.textAlign = "center";
     textCtx.textBaseline = "middle";
     textCtx.fillStyle = "white";
     textCtx.clearRect(0, 0, textCtx.canvas.width, textCtx.canvas.height);
     textCtx.fillText(text, width / 2, height / 2);
-
     const metrics = textCtx.measureText(text);
-    // console.log(metrics);
     const canvasTexture = new THREE.Texture(textCtx.canvas);
     canvasTexture.needsUpdate = true;
-
-    return canvasTexture;
+    return [canvasTexture, metrics];
   }
 
   async setup(labels) {
@@ -84,8 +88,19 @@ export default class Renderer extends EventEmitter {
     this.meshes = labels.map((label, index) => {
       const ratio = 1024 / 64;
       const textureSize = 1024;
+      const [texture, metrics] = this.createCanvasTexture(
+        label,
+        textureSize,
+        textureSize / ratio
+      );
+
       const mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(60, 60 / ratio, 1, 1),
+        new THREE.PlaneGeometry(
+          80 * (metrics.width / textureSize),
+          80 / ratio,
+          1,
+          1
+        ),
         new THREE.ShaderMaterial({
           transparent: true,
           side: THREE.FrontSide,
@@ -93,15 +108,13 @@ export default class Renderer extends EventEmitter {
           uniforms: {
             wordTexture: {
               type: "t",
-              value: this.createCanvasTexture(
-                label,
-                textureSize,
-                textureSize / ratio
-              )
+              value: texture
             },
-            fogNear: { type: "f", value: this.scene.fog.near },
-            fogFar: { type: "f", value: this.scene.fog.far },
-            highlightIntensity: { type: "f", value: 1.0 }
+            textureRatio: { type: "float", value: metrics.width },
+            fogNear: { type: "float", value: this.scene.fog.near },
+            fogFar: { type: "float", value: this.scene.fog.far },
+            fogIntensity: { type: "float", value: 1.0 },
+            highlightIntensity: { type: "float", value: 1.0 }
           },
           fragmentShader: fragmentShader,
           vertexShader: vertexShader
@@ -136,10 +149,6 @@ export default class Renderer extends EventEmitter {
           y: data[index][1] * scale,
           z: data[index][2] * scale,
           ease: Power2.easeInOut
-          // onUpdate: this.render
-          // onComplete: () => {
-          //     this.endAnimateExtreme()
-          // }
         });
       }
     });
@@ -149,8 +158,15 @@ export default class Renderer extends EventEmitter {
   }
 
   animate() {
-    // requestAnimationFrame(this.animate.bind(this));
+    this.raf = requestAnimationFrame(this.animate);
     this.render();
+  }
+
+  stopAnimate() {
+    if (this.raf) {
+      cancelAnimationFrame(this.raf);
+      this.raf = undefined;
+    }
   }
 
   render() {
@@ -165,26 +181,12 @@ export default class Renderer extends EventEmitter {
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersects = this.raycaster.intersectObjects(this.meshes);
-    // console.log(intersects.length);
     this.onIntersect(intersects[0]);
   }
 
   onIntersect(intersect) {
     this.intersected = intersect;
-
-    if (intersect) {
-      document.body.style.cursor = "pointer";
-      // this.onMouseOver(intersect.object);
-    } else {
-      document.body.style.cursor = "default";
-      // this.meshes.forEach((mesh, index) => {
-      //   if (mesh.material.uniforms.highlightIntensity.value !== 0) {
-      //     TweenLite.to(mesh.material.uniforms.highlightIntensity, 0.2, {
-      //       value: 0.0
-      //     });
-      //   }
-      // });
-    }
+    document.body.style.cursor = intersect ? "pointer" : "default";
   }
 
   onMouseOver(object) {
@@ -208,9 +210,10 @@ export default class Renderer extends EventEmitter {
   onMouseDown() {
     this.mouseDownPosition.x = this.mouse.x;
     this.mouseDownPosition.y = this.mouse.y;
+    this.animate();
   }
 
-  onMouseUp() {
+  async onMouseUp() {
     if (
       this.intersected &&
       this.mouse.x === this.mouseDownPosition.x &&
@@ -218,6 +221,11 @@ export default class Renderer extends EventEmitter {
     ) {
       this.emit("object-click", { index: this.intersected.object.name });
     }
+
+    await new Promise((resolve, reject) => {
+      setTimeout(() => resolve, 200);
+    });
+    this.stopAnimate();
   }
 
   setObjectIntensity(targets) {
@@ -229,14 +237,21 @@ export default class Renderer extends EventEmitter {
           onUpdate: this.render
         });
       } else {
-        mesh.material.uniforms.highlightIntensity.value = 0;
+        TweenLite.to(mesh.material.uniforms.highlightIntensity, 0.2, {
+          value: 0.0,
+          ease: Power3.easeOut
+        });
       }
+      TweenLite.to(mesh.material.uniforms.fogIntensity, 0.2, {
+        value: 0.0
+      });
     });
   }
 
   resetIntensity() {
     this.meshes.forEach((mesh, index) => {
       mesh.material.uniforms.highlightIntensity.value = 1.0;
+      mesh.material.uniforms.fogIntensity.value = 1.0;
     });
     this.render();
   }
