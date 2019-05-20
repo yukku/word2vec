@@ -1,6 +1,6 @@
 uniform sampler2D wordTexture;
 varying vec2 vUv;
-varying vec3 vPosition;
+// varying vec3 vPosition;
 uniform float fogNear;
 uniform float fogFar;
 uniform float highlightIntensity;

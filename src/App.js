@@ -1,32 +1,33 @@
 import Renderer from "./Renderer.js";
 import * as dat from "dat.gui";
-import math from "mathjs";
 import similarity from "compute-cosine-similarity";
 
 const ENABLE_RENDER = true;
+const ENABLE_GUI = true;
 
 export default class App {
   constructor({ canvas, width, height }) {
     this.labels = [];
     this.positions = [];
     this.weights = [];
-    this.gui = new dat.GUI({ name: "Controller" });
-    this.gui.domElement.style.cssText =
-      "position: absolute; top: 2px; left: 2px";
-    this.guiData = {
-      "word2vec-model": 0,
-      reset: this.reset.bind(this)
-    };
-    this.controller = this.gui.add(this.guiData, "word2vec-model", {
-      wiki: 0,
-      "google-news": 1,
-      gigaword: 2
-    });
 
-    this.gui.add(this.guiData, "reset");
-
-    this.controller.onChange(this.onModelChange.bind(this));
-    this.controller.onFinishChange(this.onModelFinishChange.bind(this));
+    if (ENABLE_GUI) {
+      this.gui = new dat.GUI({ name: "Controller" });
+      this.gui.domElement.style.cssText =
+        "position: absolute; top: 2px; left: 2px";
+      this.guiData = {
+        "word2vec-model": 0,
+        reset: this.reset.bind(this)
+      };
+      this.controller = this.gui.add(this.guiData, "word2vec-model", {
+        wiki: 0,
+        "google-news": 1,
+        gigaword: 2
+      });
+      this.gui.add(this.guiData, "reset");
+      this.controller.onChange(this.onModelChange.bind(this));
+      this.controller.onFinishChange(this.onModelFinishChange.bind(this));
+    }
 
     if (!ENABLE_RENDER) return;
     this.renderer = new Renderer({
@@ -93,7 +94,6 @@ export default class App {
     this.labels = labels;
     // console.log(this.labels);
     if (!ENABLE_RENDER) return;
-
     await this.renderer.setup(labels);
   }
 

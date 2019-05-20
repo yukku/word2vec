@@ -2,29 +2,16 @@
  * @author sunag / http://www.sunag.com.br/
  */
 
-import { SpriteNode } from './nodes/SpriteNode.js';
-import { NodeMaterial } from './NodeMaterial.js';
-import { NodeUtils } from '../core/NodeUtils.js';
+THREE.SpriteNodeMaterial = function () {
 
-function SpriteNodeMaterial() {
+	this.node = new THREE.SpriteNode();
 
-	var node = new SpriteNode();
+	THREE.NodeMaterial.call( this, this.node, this.node );
 
-	NodeMaterial.call( this, node, node );
+};
 
-	this.type = "SpriteNodeMaterial";
+THREE.SpriteNodeMaterial.prototype = Object.create( THREE.NodeMaterial.prototype );
+THREE.SpriteNodeMaterial.prototype.constructor = THREE.SpriteNodeMaterial;
 
-}
-
-SpriteNodeMaterial.prototype = Object.create( NodeMaterial.prototype );
-SpriteNodeMaterial.prototype.constructor = SpriteNodeMaterial;
-
-NodeUtils.addShortcuts( SpriteNodeMaterial.prototype, 'fragment', [
-	'color',
-	'alpha',
-	'mask',
-	'position',
-	'spherical'
-] );
-
-export { SpriteNodeMaterial };
+THREE.NodeMaterial.addShortcuts( THREE.SpriteNodeMaterial.prototype, 'node',
+[ 'color', 'alpha', 'transform', 'spherical' ] );

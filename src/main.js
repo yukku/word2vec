@@ -48,7 +48,7 @@ const preprocessData = data => {
       weight: Object.values(data[key])[0].map(value => Number(value))
     });
   }
-  return dataset;
+  return dataset.slice(0, 100);
 };
 
 const dataset1 = preprocessData(wikiTsneData);

@@ -5,7 +5,8 @@ import RendererUtil from "./RendererUtil.js";
 import _ from "lodash";
 import EventEmitter from "eventemitter3";
 
-require("./lib/three/examples/js/controls/OrbitControls.js");
+import "./lib/three/examples/js/controls/OrbitControls.js";
+import PostProcessing from "./PostProcessing";
 
 import fragmentShader from "./shaders/word.frag";
 import vertexShader from "./shaders/word.vert";
@@ -15,10 +16,17 @@ export default class Renderer extends EventEmitter {
     super();
     this.renderer = new THREE.WebGLRenderer({
       canvas: canvas
-      // alpha: true,
+      // minFilter: THREE.LinearFilter,
+      // magFilter: THREE.LinearFilter,
+      // // format: THREE.RGBFormat,
+      // // format: THREE.RGBAFormat,
+      // stencilBuffer: true,
+      // depthBuffer: true
+      // preserveDrawingBuffer: true,
+      // alpha: false
       // antialias: true
     });
-    // document.body.appendChild( this.renderer.domElement );
+    // document.body.appendChild(this.renderer.domElement);
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.setPixelRatio(2);
 
@@ -26,6 +34,12 @@ export default class Renderer extends EventEmitter {
     const fogColor = new THREE.Color(0x000000);
     this.scene.background = fogColor;
     this.scene.fog = new THREE.Fog(fogColor, 1, 450);
+
+    const ambientLight = new THREE.AmbientLight(0x2c3e50);
+    this.scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff);
+    this.scene.add(pointLight);
 
     this.camera = new THREE.PerspectiveCamera(70, width / height, 1, 100000);
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -62,6 +76,20 @@ export default class Renderer extends EventEmitter {
     // canvas.addEventListener("mousemove", this.render, false);
     canvas.addEventListener("wheel", this.render, false);
     canvas.addEventListener("touchmove", this.render, false);
+
+    const {
+      occlusionComposer,
+      composer,
+      pass2
+    } = PostProcessing.setupPostprocessing(
+      this.renderer,
+      this.scene,
+      this.camera
+    );
+
+    this.occlusionComposer = occlusionComposer;
+    this.composer = composer;
+    this.pass2 = pass2;
   }
 
   createCanvasTexture(text, width, height) {
@@ -119,9 +147,7 @@ export default class Renderer extends EventEmitter {
           fragmentShader: fragmentShader,
           vertexShader: vertexShader
         })
-        // new THREE.MeshPhongMaterial({
-        //   map: this.createCanvasTexture(label, textureSize, textureSize / ratio)
-        // })
+        // new THREE.MeshPhongMaterial({ color: 0x0033ff })
       );
       mesh.name = index;
       return mesh;
@@ -176,12 +202,22 @@ export default class Renderer extends EventEmitter {
       mesh.rotation.y = this.camera.rotation.y;
       mesh.rotation.z = this.camera.rotation.z;
     });
-    this.renderer.render(this.scene, this.camera);
     this.controls.update();
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
     const intersects = this.raycaster.intersectObjects(this.meshes);
     this.onIntersect(intersects[0]);
+
+    // this.renderer.clear();
+
+    // this.renderer.render(this.scene, this.camera);
+    //
+    // this.camera.layers.set(0);
+    // this.renderer.setClearColor(0x222222);
+    this.occlusionComposer.render();
+    // this.camera.layers.set(1);
+    // this.renderer.setClearColor(0x000000);
+    this.composer.render();
   }
 
   onIntersect(intersect) {

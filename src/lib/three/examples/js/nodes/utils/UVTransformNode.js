@@ -2,65 +2,47 @@
  * @author sunag / http://www.sunag.com.br/
  */
 
-import { ExpressionNode } from '../core/ExpressionNode.js';
-import { Matrix3Node } from '../inputs/Matrix3Node.js';
-import { UVNode } from '../accessors/UVNode.js';
+THREE.UVTransformNode = function () {
 
-function UVTransformNode( uv, position ) {
+	THREE.FunctionNode.call( this, "( uvTransform * vec4( uvNode, 0, 1 ) ).xy", "vec2" );
 
-	ExpressionNode.call( this, "( uvTransform * vec3( uvNode, 1 ) ).xy", "vec2" );
+	this.uv = new THREE.UVNode();
+	this.transform = new THREE.Matrix4Node();
 
-	this.uv = uv || new UVNode();
-	this.position = position || new Matrix3Node();
+};
 
-}
+THREE.UVTransformNode.prototype = Object.create( THREE.FunctionNode.prototype );
+THREE.UVTransformNode.prototype.constructor = THREE.UVTransformNode;
 
-UVTransformNode.prototype = Object.create( ExpressionNode.prototype );
-UVTransformNode.prototype.constructor = UVTransformNode;
-UVTransformNode.prototype.nodeType = "UVTransform";
-
-UVTransformNode.prototype.generate = function ( builder, output ) {
+THREE.UVTransformNode.prototype.generate = function ( builder, output ) {
 
 	this.keywords[ "uvNode" ] = this.uv;
-	this.keywords[ "uvTransform" ] = this.position;
+	this.keywords[ "uvTransform" ] = this.transform;
 
-	return ExpressionNode.prototype.generate.call( this, builder, output );
-
-};
-
-UVTransformNode.prototype.setUvTransform = function ( tx, ty, sx, sy, rotation, cx, cy ) {
-
-	cx = cx !== undefined ? cx : .5;
-	cy = cy !== undefined ? cy : .5;
-
-	this.position.value.setUvTransform( tx, ty, sx, sy, rotation, cx, cy );
+	return THREE.FunctionNode.prototype.generate.call( this, builder, output );
 
 };
 
-UVTransformNode.prototype.copy = function ( source ) {
+THREE.UVTransformNode.prototype.compose = function () {
 
-	ExpressionNode.prototype.copy.call( this, source );
+	var defaultPivot = new THREE.Vector2( .5, .5 ),
+		tempVector = new THREE.Vector3(),
+		tempMatrix = new THREE.Matrix4();
 
-	this.uv = source.uv;
-	this.position = source.position;
+	return function compose( translate, rotate, scale, optionalCenter ) {
 
-};
+		optionalCenter = optionalCenter !== undefined ? optionalCenter : defaultPivot;
 
-UVTransformNode.prototype.toJSON = function ( meta ) {
+		var matrix = this.transform.value;
 
-	var data = this.getJSONNode( meta );
+		matrix.identity()
+			.setPosition( tempVector.set( - optionalCenter.x, - optionalCenter.y, 0 ) )
+			.premultiply( tempMatrix.makeRotationZ( rotate ) )
+			.multiply( tempMatrix.makeScale( scale.x, scale.y, 0 ) )
+			.multiply( tempMatrix.makeTranslation( translate.x, translate.y, 0 ) );
 
-	if ( ! data ) {
+		return this;
 
-		data = this.createJSONNode( meta );
+	};
 
-		data.uv = this.uv.toJSON( meta ).uuid;
-		data.position = this.position.toJSON( meta ).uuid;
-
-	}
-
-	return data;
-
-};
-
-export { UVTransformNode };
+}();

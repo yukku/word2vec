@@ -44,24 +44,24 @@ THREE.TrackballControls = function ( object, domElement ) {
 	var lastPosition = new THREE.Vector3();
 
 	var _state = STATE.NONE,
-		_prevState = STATE.NONE,
+	_prevState = STATE.NONE,
 
-		_eye = new THREE.Vector3(),
+	_eye = new THREE.Vector3(),
 
-		_movePrev = new THREE.Vector2(),
-		_moveCurr = new THREE.Vector2(),
+	_movePrev = new THREE.Vector2(),
+	_moveCurr = new THREE.Vector2(),
 
-		_lastAxis = new THREE.Vector3(),
-		_lastAngle = 0,
+	_lastAxis = new THREE.Vector3(),
+	_lastAngle = 0,
 
-		_zoomStart = new THREE.Vector2(),
-		_zoomEnd = new THREE.Vector2(),
+	_zoomStart = new THREE.Vector2(),
+	_zoomEnd = new THREE.Vector2(),
 
-		_touchZoomDistanceStart = 0,
-		_touchZoomDistanceEnd = 0,
+	_touchZoomDistanceStart = 0,
+	_touchZoomDistanceEnd = 0,
 
-		_panStart = new THREE.Vector2(),
-		_panEnd = new THREE.Vector2();
+	_panStart = new THREE.Vector2(),
+	_panEnd = new THREE.Vector2();
 
 	// for reset
 
@@ -101,6 +101,16 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	};
 
+	this.handleEvent = function ( event ) {
+
+		if ( typeof this[ event.type ] == 'function' ) {
+
+			this[ event.type ]( event );
+
+		}
+
+	};
+
 	var getMouseOnScreen = ( function () {
 
 		var vector = new THREE.Vector2();
@@ -135,7 +145,7 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	}() );
 
-	this.rotateCamera = ( function () {
+	this.rotateCamera = ( function() {
 
 		var axis = new THREE.Vector3(),
 			quaternion = new THREE.Quaternion(),
@@ -225,7 +235,7 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	};
 
-	this.panCamera = ( function () {
+	this.panCamera = ( function() {
 
 		var mouseChange = new THREE.Vector2(),
 			objectUp = new THREE.Vector3(),
@@ -460,8 +470,6 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 		if ( _this.enabled === false ) return;
 
-		if ( _this.noZoom === true ) return;
-
 		event.preventDefault();
 		event.stopPropagation();
 
@@ -492,8 +500,6 @@ THREE.TrackballControls = function ( object, domElement ) {
 	function touchstart( event ) {
 
 		if ( _this.enabled === false ) return;
-
-		event.preventDefault();
 
 		switch ( event.touches.length ) {
 
@@ -579,7 +585,7 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	}
 
-	this.dispose = function () {
+	this.dispose = function() {
 
 		this.domElement.removeEventListener( 'contextmenu', contextmenu, false );
 		this.domElement.removeEventListener( 'mousedown', mousedown, false );
