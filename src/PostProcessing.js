@@ -13,12 +13,12 @@ import volumetricLightVertexShader from "./shaders/volumetricLight.vert";
 const VolumetericLightShader = {
   uniforms: {
     tDiffuse: { type: "t", value: null },
-    lightPosition: { value: new THREE.Vector2(0.0, 0.0) },
-    exposure: { value: 0.18 },
+    lightPosition: { value: new THREE.Vector2(0.5, 0.5) },
+    exposure: { value: 0.28 },
     decay: { value: 0.95 },
-    density: { value: 0.8 },
-    weight: { value: 0.4 },
-    samples: { value: 50 }
+    density: { value: 0.5 },
+    weight: { value: 0.3 },
+    samples: { value: 80 }
   },
   vertexShader: volumetricLightVertexShader,
   fragmentShader: volumetricLightFragmentShader
