@@ -4,98 +4,121 @@ if (!global.THREE) global.THREE = THREE;
 require("./lib/three/examples/js/postprocessing/EffectComposer.js");
 require("./lib/three/examples/js/postprocessing/ShaderPass.js");
 require("./lib/three/examples/js/postprocessing/RenderPass.js");
+require("./lib/three/examples/js/postprocessing/SavePass.js");
 require("./lib/three/examples/js/shaders/CopyShader.js");
 require("./lib/three/examples/js/shaders/SepiaShader.js");
+require("./lib/three/examples/js/shaders/BrightnessContrastShader.js");
+require("./lib/three/examples/js/extras/shaders.js");
 
-import volumetricLightFragmentShader from "./shaders/volumetricLight.frag";
-import volumetricLightVertexShader from "./shaders/volumetricLight.vert";
+import "./lib/three/examples/js/shaders/HorizontalBlurShader.js";
+import "./lib/three/examples/js/shaders/VerticalBlurShader.js";
+import godraysFragmentShader from "./shaders/godrays.frag";
+import godraysVertexShader from "./shaders/godrays.vert";
 
-const VolumetericLightShader = {
+const GodraysShader = {
   uniforms: {
-    tDiffuse: { type: "t", value: null },
-    lightPosition: { value: new THREE.Vector2(0.5, 0.5) },
-    exposure: { value: 0.28 },
-    decay: { value: 0.95 },
-    density: { value: 0.5 },
-    weight: { value: 0.3 },
-    samples: { value: 80 }
+    tDiffuse: { type: "t", value: 0, texture: null },
+    fX: { type: "f", value: 0.5 },
+    fY: { type: "f", value: 0.5 },
+    fExposure: { type: "f", value: 0.6 },
+    fDecay: { type: "f", value: 0.93 },
+    fDensity: { type: "f", value: 0.96 },
+    fWeight: { type: "f", value: 0.4 },
+    fClamp: { type: "f", value: 1.0 }
   },
-  vertexShader: volumetricLightVertexShader,
-  fragmentShader: volumetricLightFragmentShader
-};
-
-const AdditiveBlendingShader = {
-  uniforms: {
-    tDiffuse: { value: null },
-    tAdd: { value: null }
-  },
-  vertexShader: [
-    "varying vec2 vUv;",
-    "void main() {",
-    "vUv = uv;",
-    "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-    "}"
-  ].join("\n"),
-
-  fragmentShader: [
-    "uniform sampler2D tDiffuse;",
-    "uniform sampler2D tAdd;",
-    "varying vec2 vUv;",
-    "void main() {",
-    "vec4 color = texture2D( tDiffuse, vUv );",
-    "vec4 add = texture2D( tAdd, vUv );",
-    "gl_FragColor = color + add;",
-    "}"
-  ].join("\n")
-};
-
-const PassThroughShader = {
-  uniforms: {
-    tDiffuse: { value: null }
-  },
-
-  vertexShader: [
-    "varying vec2 vUv;",
-    "void main() {",
-    "vUv = uv;",
-    "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-    "}"
-  ].join("\n"),
-
-  fragmentShader: [
-    "uniform sampler2D tDiffuse;",
-    "varying vec2 vUv;",
-    "void main() {",
-    "gl_FragColor = texture2D( tDiffuse, vec2( vUv.x, vUv.y ) );",
-    "}"
-  ].join("\n")
+  vertexShader: godraysVertexShader,
+  fragmentShader: godraysFragmentShader
 };
 
 export default class PostProcessing {
   static setupPostprocessing(renderer, scene, camera) {
-    const occlusionRenderTarget = new THREE.WebGLRenderTarget(
-      window.innerWidth * 0.5,
-      window.innerHeight * 0.5
+    var W = window.innerWidth;
+    var H = window.innerHeight;
+    var renderTargetParameters = {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBFormat,
+      stencilBuffer: true
+    };
+
+    var renderTargetOcl = new THREE.WebGLRenderTarget(
+      W,
+      H,
+      renderTargetParameters
     );
 
-    const occlusionComposer = new THREE.EffectComposer(
-      renderer,
-      occlusionRenderTarget
+    var bluriness = 2;
+    var hblur = new THREE.ShaderPass(THREE.HorizontalBlurShader);
+    var vblur = new THREE.ShaderPass(THREE.VerticalBlurShader);
+    hblur.uniforms.h.value = bluriness / W;
+    vblur.uniforms.v.value = bluriness / H;
+
+    var brightnessContrastShader = new THREE.ShaderPass(
+      THREE.BrightnessContrastShader
+    );
+    brightnessContrastShader.uniforms.brightness.value = 0.06;
+    brightnessContrastShader.uniforms.contrast.value = 0.3;
+
+    var renderModel = new THREE.RenderPass(scene, camera);
+    var renderModel2 = new THREE.RenderPass(scene, camera);
+
+    var grPass = new THREE.ShaderPass(GodraysShader);
+
+    grPass.uniforms["fClamp"].value = 1;
+    grPass.uniforms["fDecay"].value = 0.63;
+    grPass.uniforms["fDensity"].value = 0.96;
+    grPass.uniforms["fExposure"].value = 0.6;
+    grPass.uniforms["fWeight"].value = 0.4;
+    grPass.uniforms["fX"].value = 0.5;
+    grPass.uniforms["fY"].value = 1.4;
+
+    grPass.needsSwap = true;
+    grPass.renderToScreen = false;
+
+    var effectCopy = new THREE.ShaderPass(THREE.CopyShader);
+    effectCopy.renderToScreen = true;
+
+    var effectSave2 = new THREE.SavePass(
+      new THREE.WebGLRenderTarget(W, H, renderTargetParameters)
     );
 
-    const scenePass = new THREE.RenderPass(scene, camera);
-    occlusionComposer.addPass(scenePass);
+    var occlusionComposer = new THREE.EffectComposer(renderer, renderTargetOcl);
 
-    const pass = new THREE.ShaderPass(VolumetericLightShader);
-    pass.renderToScreen = true;
-    occlusionComposer.addPass(pass);
+    // render the occlude scene
+    // occlusionComposer.addPass( renderModelOcl );
 
-    const composer = new THREE.EffectComposer(renderer);
-    composer.addPass(new THREE.RenderPass(scene, camera));
-    const pass2 = new THREE.ShaderPass(AdditiveBlendingShader);
-    pass2.uniforms.tAdd.value = occlusionRenderTarget.texture;
-    composer.addPass(pass2);
+    // remove color to leaver alpha only
+    var effectSave1 = new THREE.SavePass(
+      new THREE.WebGLRenderTarget(W, H, renderTargetParameters)
+    );
+    //occlusionComposer.addPass( effectSave1 );
+    var removecolorPass = new THREE.ShaderPass(THREE.Extras.Shaders.Alpha);
+    removecolorPass.uniforms["tAdd"].value = effectSave1.renderTarget;
+    removecolorPass.needsSwap = true;
+    occlusionComposer.addPass(removecolorPass);
+    occlusionComposer.addPass(renderModel);
+    // blur,blur,blur,blur, godrays
+    occlusionComposer.addPass(hblur);
+    occlusionComposer.addPass(vblur);
+    occlusionComposer.addPass(hblur);
+    occlusionComposer.addPass(vblur);
 
-    return { occlusionComposer, composer };
+    occlusionComposer.addPass(brightnessContrastShader);
+    // occlusionComposer.addPass(grPass);
+
+    // save god rays
+    occlusionComposer.addPass(effectSave2);
+
+    // render the actual scene
+    occlusionComposer.addPass(renderModel2);
+
+    // final pass to add godrays
+    var finalPass = new THREE.ShaderPass(THREE.Extras.Shaders.Additive);
+    finalPass.uniforms["tAdd"].value = effectSave2.renderTarget;
+    finalPass.needsSwap = true;
+    finalPass.renderToScreen = true;
+    occlusionComposer.addPass(finalPass);
+
+    return { occlusionComposer };
   }
 }

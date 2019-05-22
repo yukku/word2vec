@@ -18,7 +18,7 @@ void main(){
     if(i == samples){
       break;
     }
-    texCoord -= deltaTextCoord;
+    texCoord += deltaTextCoord;
     vec4 sample = texture2D(tDiffuse, texCoord);
     sample *= illuminationDecay * weight;
     color += sample;

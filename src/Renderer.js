@@ -217,7 +217,7 @@ export default class Renderer extends EventEmitter {
     this.occlusionComposer.render();
     // this.camera.layers.set(1);
     // this.renderer.setClearColor(0x000000);
-    this.composer.render();
+    // this.composer.render();
   }
 
   onIntersect(intersect) {
@@ -293,8 +293,10 @@ export default class Renderer extends EventEmitter {
   }
 
   resize({ width, height }) {
+    const pixelRatio = 2;
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    this.occlusionComposer.setSize(width * pixelRatio, height * pixelRatio);
   }
 }

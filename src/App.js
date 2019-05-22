@@ -71,9 +71,9 @@ export default class App {
           // intensity: item.distance
         };
       });
-    // console.log(
-    //   targetObjects.filter(item => item.distance > 0.55).map(item => item.label)
-    // );
+    console.log(
+      targetObjects.filter(item => item.distance > 0.55).map(item => item.label)
+    );
     this.renderer.setObjectIntensity(
       targetObjects.map(item => [item.index, item.intensity])
     );
