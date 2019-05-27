@@ -100,10 +100,10 @@ export default class PostProcessing {
     // blur,blur,blur,blur, godrays
     occlusionComposer.addPass(hblur);
     occlusionComposer.addPass(vblur);
-    occlusionComposer.addPass(hblur);
-    occlusionComposer.addPass(vblur);
+    // occlusionComposer.addPass(hblur);
+    // occlusionComposer.addPass(vblur);
 
-    occlusionComposer.addPass(brightnessContrastShader);
+    // occlusionComposer.addPass(brightnessContrastShader);
     // occlusionComposer.addPass(grPass);
 
     // save god rays

@@ -49,7 +49,7 @@ export default class Renderer extends EventEmitter {
     this.mouse = new THREE.Vector2();
     this.mouse.x = 999;
     this.mouse.y = 999;
-    this.controls.autoRotate = true;
+    // this.controls.autoRotate = true;
     this.controls.autoRotateSpeed = 0.1;
     this.controls.zoomSpeed = 0.5;
     this.controls.maxDistance = 360;
@@ -153,30 +153,7 @@ export default class Renderer extends EventEmitter {
     });
 
     this.scene.add(new THREE.AmbientLight(0xffffff, 1));
-
-    const segments = labels.length * labels.length;
-    this.positions = new Float32Array(segments * 3);
-    this.colors = new Float32Array(segments * 3);
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.addAttribute(
-      "position",
-      new THREE.BufferAttribute(this.positions, 3).setDynamic(true)
-    );
-    geometry.addAttribute(
-      "color",
-      new THREE.BufferAttribute(this.colors, 3).setDynamic(true)
-    );
-
-    geometry.computeBoundingSphere();
-    geometry.setDrawRange(0, 0);
-    const material = new THREE.LineBasicMaterial({
-      vertexColors: THREE.VertexColors,
-      blending: THREE.AdditiveBlending,
-      transparent: true
-    });
-    this.linesMesh = new THREE.LineSegments(geometry, material);
-    this.scene.add(this.linesMesh);
+    this.animate();
   }
 
   setMousePositions(x, y) {
@@ -200,7 +177,70 @@ export default class Renderer extends EventEmitter {
       onUpdate: this.render
     });
 
-    this.animate();
+    const segments = data.length * data.length;
+    this.positions = new Float32Array(segments * 3);
+    this.colors = new Float32Array(segments * 3);
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.addAttribute(
+      "position",
+      new THREE.BufferAttribute(this.positions, 3).setDynamic(true)
+    );
+    geometry.addAttribute(
+      "color",
+      new THREE.BufferAttribute(this.colors, 3).setDynamic(true)
+    );
+
+    geometry.computeBoundingSphere();
+    geometry.setDrawRange(0, 0);
+    const material = new THREE.LineBasicMaterial({
+      vertexColors: THREE.VertexColors,
+      blending: THREE.AdditiveBlending,
+      transparent: true
+    });
+    this.linesMesh = new THREE.LineSegments(geometry, material);
+    this.scene.add(this.linesMesh);
+
+    /* var material = new THREE.LineBasicMaterial({
+      color: "#ffffff",
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.3
+    });
+
+    this.lines = data.reduce((accum, vector, index) => {
+      const vectorFrom = new THREE.Vector3(vector[0], vector[1], vector[2]);
+
+      for (let i = index; i < data.length; i++) {
+        const vectorTo = new THREE.Vector3(data[i][0], data[i][1], data[i][2]);
+        const distance = vectorFrom.distanceTo(vectorTo);
+        const geometry = new THREE.Geometry();
+
+        if (distance < 7) {
+          geometry.vertices.push(
+            new THREE.Vector3(
+              vectorFrom.x * scale,
+              vectorFrom.y * scale,
+              vectorFrom.z * scale
+            )
+          );
+          geometry.vertices.push(
+            new THREE.Vector3(
+              vectorTo.x * scale,
+              vectorTo.y * scale,
+              vectorTo.z * scale
+            )
+          );
+          const line = new THREE.LineSegments(geometry, material);
+          accum = accum.concat([line]);
+        }
+      }
+      return accum;
+    }, []);
+
+    this.lines.forEach(line => {
+      this.scene.add(line);
+    }); */
   }
 
   animate() {
@@ -228,44 +268,10 @@ export default class Renderer extends EventEmitter {
     const intersects = this.raycaster.intersectObjects(this.meshes);
     this.onIntersect(intersects[0]);
 
-    const minDistance = 50;
-    let vertexpos = 0;
-    let colorpos = 0;
-    var numConnected = 0;
-    this.meshes.forEach((mesh, i) => {
-      // Check collision
-      for (var j = i + 1; j < this.meshes.length; j++) {
-        var dx = mesh.position.x - this.meshes[j].position.x;
-        var dy = mesh.position.y - this.meshes[j].position.y;
-        var dz = mesh.position.z - this.meshes[j].position.z;
-        var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (dist < minDistance) {
-          var alpha = 1.0 - dist / minDistance;
+    // this.renderer.clear();
 
-          this.positions[vertexpos++] = mesh.position.x;
-          this.positions[vertexpos++] = mesh.position.y;
-          this.positions[vertexpos++] = mesh.position.z;
-          this.positions[vertexpos++] = this.meshes[j].position.x;
-          this.positions[vertexpos++] = this.meshes[j].position.y;
-          this.positions[vertexpos++] = this.meshes[j].position.z;
-          this.colors[colorpos++] = alpha;
-          this.colors[colorpos++] = alpha;
-          this.colors[colorpos++] = alpha;
-          this.colors[colorpos++] = alpha;
-          this.colors[colorpos++] = alpha;
-          this.colors[colorpos++] = alpha;
-
-          numConnected++;
-        }
-      }
-    });
-
-    this.linesMesh.geometry.setDrawRange(0, numConnected * 2);
-    this.linesMesh.geometry.attributes.position.needsUpdate = true;
-    this.linesMesh.geometry.attributes.color.needsUpdate = true;
-
-    // this.renderer.render(this.scene, this.camera);
-    this.occlusionComposer.render();
+    this.renderer.render(this.scene, this.camera);
+    // this.occlusionComposer.render();
 
     //
     // this.camera.layers.set(0);
