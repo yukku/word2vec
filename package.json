@@ -62,7 +62,7 @@
     "gulp-util": "^3.0.8",
     "gulp-watch": "^5.0.1",
     "gulp-webpack": "^1.5.0",
-    "jpeg-js": "^0.3.5",
+    "jpeg-js": "^0.4.1",
     "keras-js": "^1.0.3",
     "lodash": "^4.17.11",
     "mathjs": "^5.10.1",
